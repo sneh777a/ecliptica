@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routers import auth
 
-app = FastAPI(title="LifeOS API", version="1.0")
+app = FastAPI(title="Ecliptica API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -11,6 +12,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include routers
+app.include_router(auth.router)
+
 @app.get("/")
 async def root():
-    return {"message": "LifeOS Backend is running!"}
+    return {"message": "Ecliptica Backend is running!"}
