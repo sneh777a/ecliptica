@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth
+from app.database import engine, Base
+from app.models.user import User
 
 app = FastAPI(title="Ecliptica API", version="1.0")
 
@@ -12,7 +14,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+@app.on_event("startup")
+async def startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
 app.include_router(auth.router)
 
 @app.get("/")
