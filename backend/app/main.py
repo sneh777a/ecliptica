@@ -1,12 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth
+from app.routers import auth, goals
 from app.database import engine, Base
 from app.models.user import User
-from app.routers import auth, goals
-
-
-app.include_router(goals.router)
+from app.models.goal import Goal, Task
 
 app = FastAPI(title="Ecliptica API", version="1.0")
 
@@ -27,6 +24,7 @@ async def startup():
         await conn.run_sync(Base.metadata.create_all)
 
 app.include_router(auth.router)
+app.include_router(goals.router)
 
 @app.get("/")
 async def root():
