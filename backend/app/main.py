@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth
 from app.database import engine, Base
 from app.models.user import User
+from app.routers import auth, goals
 
 app = FastAPI(title="Ecliptica API", version="1.0")
 
