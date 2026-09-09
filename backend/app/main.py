@@ -11,10 +11,11 @@ app = FastAPI(title="Ecliptica API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://ecliptica-eight.vercel.app"
-    ],
+allow_origins=[
+    "http://localhost:5173",
+    "https://ecliptica-eight.vercel.app",
+    "https://ecliptica-mu.vercel.app",
+]
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
