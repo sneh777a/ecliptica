@@ -229,11 +229,14 @@ export default function Goals() {
 
         {/* CENTER — Calendar + Schedule */}
         <div className="xl:col-span-5 space-y-4">
+          {/* Calendar */}
           <div className="rounded-2xl border border-white/5 bg-[#121218] p-5">
             <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
-                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
+                onClick={() =>
+                  setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
+                }
                 className="text-gray-400 hover:text-white px-2"
               >
                 ‹
@@ -249,13 +252,16 @@ export default function Goals() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
+                  onClick={() =>
+                    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
+                  }
                   className="text-gray-400 hover:text-white px-2"
                 >
                   ›
                 </button>
               </div>
             </div>
+
             <div className="grid grid-cols-7 gap-1 text-center mb-2">
               {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
                 <div key={d} className="text-[10px] uppercase text-gray-500 py-1">
@@ -263,6 +269,7 @@ export default function Goals() {
                 </div>
               ))}
             </div>
+
             <div className="grid grid-cols-7 gap-1">
               {calendar.cells.map((d, i) => {
                 if (!d) return <div key={`e-${i}`} />;
@@ -288,34 +295,106 @@ export default function Goals() {
             </div>
           </div>
 
+          {/* My Schedule — under calendar */}
           <div className="rounded-2xl border border-white/5 bg-[#121218] p-5">
-            <h3 className="text-sm font-semibold text-white mb-3">My Schedule</h3>
-            <div className="space-y-2">
-              {todayTasks.filter((t) => t.time).length === 0 && (
-                <p className="text-xs text-gray-500">Tasks with times will show here</p>
-              )}
-              {todayTasks
-                .filter((t) => t.time)
-                .map((t) => (
-                  <div
-                    key={t.id}
-                    className="flex items-center gap-3 rounded-xl bg-purple-500/10 border border-purple-500/20 px-3 py-2"
-                  >
-                    <span className="text-xs text-purple-300 w-12">{t.time}</span>
-                    <span className={`text-sm ${t.done ? "line-through text-gray-500" : "text-white"}`}>
-                      {t.text}
-                    </span>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-white">My Schedule</h3>
+              <span className="text-[11px] text-gray-500">Today</span>
+            </div>
+
+            {/* Hours header */}
+            <div className="overflow-x-auto">
+              <div className="min-w-[520px]">
+                <div className="grid grid-cols-10 gap-1 mb-2">
+                  {["9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"].map(
+                    (h) => (
+                      <div key={h} className="text-[10px] text-gray-500 text-center">
+                        {h}
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {/* Schedule track */}
+                <div className="relative h-28 rounded-xl border border-white/5 bg-[#0b0b0f] overflow-hidden">
+                  {/* vertical grid lines */}
+                  <div className="absolute inset-0 grid grid-cols-10">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div key={i} className="border-r border-white/5 last:border-r-0" />
+                    ))}
                   </div>
-                ))}
-              {todayTasks.filter((t) => !t.time).slice(0, 3).map((t) => (
+
+                  {/* Task blocks */}
+                  <div className="relative z-10 h-full p-2 flex flex-wrap gap-2 content-start">
+                    {todayTasks.length === 0 && (
+                      <p className="text-xs text-gray-500 m-auto">
+                        Add tasks to see them on your schedule
+                      </p>
+                    )}
+
+                    {todayTasks.map((t, idx) => {
+                      const colors = [
+                        "bg-purple-600/90 border-purple-400/40",
+                        "bg-blue-600/90 border-blue-400/40",
+                        "bg-amber-700/90 border-amber-500/40",
+                        "bg-cyan-700/90 border-cyan-500/40",
+                      ];
+                      const color = colors[idx % colors.length];
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => toggleTask(t.id)}
+                          className={`rounded-lg border px-3 py-2 text-left shadow-lg max-w-[140px] ${color} ${
+                            t.done ? "opacity-50" : ""
+                          }`}
+                        >
+                          <p
+                            className={`text-xs font-medium text-white truncate ${
+                              t.done ? "line-through" : ""
+                            }`}
+                          >
+                            {t.text}
+                          </p>
+                          <p className="text-[10px] text-white/70 mt-0.5">
+                            {t.time || "Anytime"}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* List fallback under the track */}
+            <div className="mt-4 space-y-2">
+              {todayTasks.map((t) => (
                 <div
-                  key={t.id}
+                  key={`row-${t.id}`}
                   className="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/5 px-3 py-2"
                 >
-                  <span className="text-xs text-gray-500 w-12">—</span>
-                  <span className={`text-sm ${t.done ? "line-through text-gray-500" : "text-gray-200"}`}>
+                  <span className="text-[11px] text-purple-300 w-14 shrink-0">
+                    {t.time || "—"}
+                  </span>
+                  <span
+                    className={`text-sm flex-1 ${
+                      t.done ? "line-through text-gray-500" : "text-gray-200"
+                    }`}
+                  >
                     {t.text}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => toggleTask(t.id)}
+                    className={`text-[10px] px-2 py-1 rounded-lg border ${
+                      t.done
+                        ? "border-purple-500/40 text-purple-300"
+                        : "border-gray-600 text-gray-400 hover:border-purple-500"
+                    }`}
+                  >
+                    {t.done ? "Done" : "Mark"}
+                  </button>
                 </div>
               ))}
             </div>
