@@ -44,7 +44,14 @@ async def create_goal(
     db.add(new_goal)
     await db.commit()
     await db.refresh(new_goal)
-    return new_goal
+
+    # Reload with tasks so response_model does not crash
+    result = await db.execute(
+        select(Goal)
+        .where(Goal.id == new_goal.id)
+        .options(selectinload(Goal.tasks))
+    )
+    return result.scalars().first()
 
 @router.delete("/{goal_id}")
 async def delete_goal(
