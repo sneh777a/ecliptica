@@ -1,15 +1,13 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from datetime import datetime, timedelta
-import secrets
+from datetime import datetime
 
 from app.schemas.user import (
     UserCreate,
     UserLogin,
     UserResponse,
     Token,
-    ForgotPasswordRequest,
     ResetPasswordRequest,
 )
 from app.database import get_db
@@ -69,28 +67,6 @@ async def login(user: UserLogin, db: AsyncSession = Depends(get_db)):
     return {
         "access_token": access_token,
         "token_type": "bearer",
-    }
-
-
-@router.post("/forgot-password")
-async def forgot_password(body: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == body.email))
-    user = result.scalars().first()
-
-    msg = "If that email is registered, you can reset your password."
-
-    if not user:
-        return {"message": msg, "reset_token": None}
-
-    token = secrets.token_urlsafe(32)
-    user.reset_token = token
-    user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
-    await db.commit()
-
-    return {
-        "message": msg,
-        "reset_token": token,
-        "reset_path": f"/reset-password?token={token}",
     }
 
 
