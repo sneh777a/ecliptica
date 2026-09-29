@@ -56,7 +56,7 @@ export default function Login() {
 
         {/* glass bubble card */}
         <div
-          className="
+          className="auth-card
             relative rounded-[2rem] p-9 sm:p-12
             bg-white/[0.06] backdrop-blur-2xl
             border border-white/20
@@ -127,7 +127,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="
+              className="auth-button
                 w-full mt-3 py-4 rounded-2xl font-medium text-white
                 bg-gradient-to-r from-purple-600/90 to-violet-500/90
                 hover:from-purple-500 hover:to-violet-400
