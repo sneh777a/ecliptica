@@ -85,7 +85,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className={inputClass}
+                className={`auth-input ${inputClass}`}
                 required
                 autoComplete="email"
               />
@@ -103,13 +103,13 @@ export default function Login() {
                   Forgot password?
                 </Link>
               </div>
-              <div className="relative">
+              <div className="auth-card-content relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className={`${inputClass} pr-12`}
+                className={`auth-input ${inputClass} pr-12`}
                 required
                 autoComplete="current-password"
               />
