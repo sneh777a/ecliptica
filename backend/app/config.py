@@ -10,7 +10,8 @@ class Settings(BaseSettings):
     MAIL_USER: str = ""
     MAIL_PASS: str = ""
     MAIL_FROM: str = ""
-    APP_URL: str = "https://ecliptica-eight.vercel.app"
+    # Frontend URL used in password-reset links (override on Render if needed)
+    APP_URL: str = "https://ecliptica-mu.vercel.app"
 
     class Config:
         env_file = ".env"
