@@ -8,14 +8,24 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
     setLoading(true);
     try {
       await axios.post(`${API_URL}/auth/register`, { name, email, password });
@@ -76,7 +86,7 @@ export default function Register() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-4.5">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">Full name</label>
                   <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={inputClass} required autoComplete="name" />
@@ -95,6 +105,15 @@ export default function Register() {
                   </div>
                 </div>
 
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">Confirm password</label>
+                  <div className="relative">
+                    <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" className={`${inputClass} pr-12`} required autoComplete="new-password" />
+                    <button type="button" onClick={() => setShowConfirmPassword((value) => !value)} aria-label={showConfirmPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-sm text-white/30 transition hover:text-white/70">
+                      {showConfirmPassword ? "◉" : "○"}
+                    </button>
+                  </div>
+                </div>
                 <button type="submit" disabled={loading} className="group relative mt-2 w-full overflow-hidden rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 py-3.5 font-medium text-white shadow-[0_0_30px_rgba(139,92,246,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(139,92,246,0.4)] disabled:cursor-not-allowed disabled:opacity-50">
                   <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
                   <span className="relative">{loading ? "Creating your orbit..." : "Create account  ✦"}</span>
