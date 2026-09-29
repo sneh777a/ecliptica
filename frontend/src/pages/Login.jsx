@@ -9,6 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -50,7 +51,7 @@ export default function Login() {
           <h1 className="text-3xl font-semibold text-white tracking-[0.08em] drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
             Ecliptica
           </h1>
-          <p className="text-white/40 mt-2 text-sm">Your personal orbit of life</p>
+          <p className="text-white/40 mt-2 text-sm">Your personal orbit</p>
         </div>
 
         {/* glass bubble card */}
@@ -65,8 +66,8 @@ export default function Login() {
           {/* inner highlight rim */}
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
 
-          <h2 className="text-lg font-medium text-white/95 mb-1 relative">Welcome back</h2>
-          <p className="text-sm text-white/40 mb-6 relative">Sign in to continue</p>
+          <h2 className="text-lg font-medium text-white/95 mb-1 relative">Welcome back <span className="text-purple-300">✦</span></h2>
+          <p className="text-sm text-white/40 mb-7 relative">Your little space is waiting for you.</p>
 
           {error && (
             <div className="mb-5 text-sm text-red-200/90 bg-red-500/10 border border-red-400/20 rounded-2xl px-4 py-3 relative">
@@ -102,15 +103,26 @@ export default function Login() {
                   Forgot password?
                 </Link>
               </div>
+              <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className={inputClass}
                 required
                 autoComplete="current-password"
+                className={`${inputClass} pr-12`}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-sm text-white/30 hover:text-white/70 transition"
+              >
+                {showPassword ? "◉" : "○"}
+              </button>
+              </div>
             </div>
 
             <button
@@ -127,17 +139,17 @@ export default function Login() {
                 transition-all duration-300
               "
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Entering your orbit..." : "Sign in  ✦"}
             </button>
           </form>
 
           <p className="text-center text-white/40 text-sm mt-8 relative">
-            Don’t have an account?{" "}
+            New to Ecliptica?{" "}
             <Link
               to="/register"
               className="text-purple-300 hover:text-purple-200 font-medium transition"
             >
-              Create one
+              Create your space
             </Link>
           </p>
         </div>
