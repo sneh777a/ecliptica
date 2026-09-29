@@ -109,10 +109,9 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className={inputClass}
+                className={`${inputClass} pr-12`}
                 required
                 autoComplete="current-password"
-                className={`${inputClass} pr-12`}
               />
               <button
                 type="button"
