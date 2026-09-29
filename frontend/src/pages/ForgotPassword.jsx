@@ -15,6 +15,7 @@ export default function ForgotPassword() {
     setError("");
     setResult(null);
     setLoading(true);
+
     try {
       const res = await axios.post(`${API_URL}/auth/forgot-password`, { email });
       setResult(res.data);
@@ -47,18 +48,18 @@ export default function ForgotPassword() {
               <span className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,0.9)]" />
               Find your way back
             </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold tracking-[0.12em] text-white drop-shadow-[0_0_28px_rgba(167,139,250,0.3)]">
+            <h1 className="text-4xl font-semibold tracking-[0.12em] text-white drop-shadow-[0_0_28px_rgba(167,139,250,0.3)] sm:text-5xl">
               ECLIPTICA
             </h1>
           </div>
 
-          <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-9 sm:p-12 shadow-[0_25px_100px_rgba(0,0,0,0.45),0_0_70px_rgba(124,58,237,0.12),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-2xl">
+          <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-9 shadow-[0_25px_100px_rgba(0,0,0,0.45),0_0_70px_rgba(124,58,237,0.12),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-2xl sm:p-12">
             <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-violet-400/10 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-fuchsia-400/10 blur-3xl" />
 
             <div className="auth-card-content relative">
               <div className="auth-description mb-10">
-                <p className="mb-3 text-2xl sm:text-3xl font-medium tracking-tight text-white">
+                <p className="mb-3 text-2xl font-medium tracking-tight text-white sm:text-3xl">
                   Forgot your password? <span className="text-violet-300">✦</span>
                 </p>
                 <p className="text-sm leading-6 text-white/40">
@@ -69,7 +70,7 @@ export default function ForgotPassword() {
               {error && (
                 <div
                   role="alert"
-                  className="mb-6 rounded-2xl border border-red-300/15 bg-red-400/[0.07] px-5 py-4 text-sm text-red-100/80"
+                  className="mb-6 rounded-2xl border border-rose-300/15 bg-rose-400/[0.055] px-5 py-4 text-sm text-rose-100/75"
                 >
                   {error}
                 </div>
@@ -77,32 +78,21 @@ export default function ForgotPassword() {
 
               {result ? (
                 <div className="flex flex-col gap-6">
-                  <div className="rounded-2xl border border-emerald-300/15 bg-emerald-400/[0.07] px-5 py-5">
-                    <div className="mb-3 text-lg text-emerald-200/90">✦</div>
-                    <p className="text-sm leading-relaxed text-white/75">{result.message}</p>
-                  </div>
-
-                  {result.reset_token && (
-                    <div className="rounded-2xl border border-violet-300/20 bg-violet-400/[0.08] px-5 py-5">
-                      <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-violet-200/55">
-                        Reset link
-                      </p>
-                      <Link
-                        to={result.reset_path}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-violet-300 underline decoration-violet-300/30 underline-offset-4 transition hover:text-violet-200"
-                      >
-                        Set a new password
-                        <span aria-hidden="true">→</span>
-                      </Link>
-                      <p className="mt-3 text-xs leading-5 text-white/30">
-                        This link works for one hour. Keep it private.
-                      </p>
+                  <div className="rounded-2xl border border-violet-200/15 bg-gradient-to-br from-violet-300/[0.09] via-white/[0.035] to-fuchsia-300/[0.06] px-5 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_12px_35px_rgba(124,58,237,0.08)]">
+                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-violet-200/15 bg-violet-300/[0.08] text-violet-200">
+                      ✦
                     </div>
-                  )}
+                    <p className="text-sm leading-relaxed text-white/75">
+                      {result.message}
+                    </p>
+                    <p className="mt-3 text-xs leading-5 text-white/35">
+                      Check your inbox and spam folder for the reset link.
+                    </p>
+                  </div>
 
                   <Link
                     to="/login"
-                    className="block pt-2 text-center text-sm text-white/40 transition hover:text-white/70"
+                    className="block pt-1 text-center text-sm text-white/40 transition hover:text-white/70"
                   >
                     Back to sign in
                   </Link>
