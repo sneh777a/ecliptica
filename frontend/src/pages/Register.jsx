@@ -10,6 +10,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -29,94 +30,93 @@ export default function Register() {
   };
 
   const inputClass =
-    "w-full bg-white/5 border border-white/15 text-white rounded-2xl px-4 py-3.5 text-sm placeholder:text-white/30 focus:outline-none focus:border-purple-400/50 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300";
+    "w-full bg-black/20 border border-white/10 text-white rounded-2xl px-4 py-3.5 text-sm placeholder:text-white/20 focus:outline-none focus:border-violet-300/45 focus:bg-white/[0.07] focus:shadow-[0_0_25px_rgba(139,92,246,0.13)] transition-all duration-300";
 
   return (
-    <div className="min-h-screen bg-[#07070c] flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[15%] left-[20%] w-72 h-72 rounded-full bg-purple-600/20 blur-[90px]" />
-        <div className="absolute bottom-[20%] right-[15%] w-96 h-96 rounded-full bg-indigo-600/15 blur-[110px]" />
-        <div className="absolute top-[50%] right-[30%] w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[60px]" />
+    <main className="relative min-h-screen overflow-hidden bg-[#070817] text-white">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px]" />
+        <div className="absolute -right-32 top-1/4 h-[30rem] w-[30rem] rounded-full bg-fuchsia-500/10 blur-[130px]" />
+        <div className="absolute bottom-[-12rem] left-1/3 h-[32rem] w-[32rem] rounded-full bg-indigo-500/15 blur-[140px]" />
+        <div className="absolute left-[12%] top-[20%] h-1 w-1 animate-pulse rounded-full bg-white/70 shadow-[0_0_12px_rgba(255,255,255,0.8)]" />
+        <div className="absolute right-[17%] top-[17%] h-1 w-1 animate-pulse rounded-full bg-white/60 [animation-delay:1200ms]" />
+        <div className="absolute left-[8%] top-[52%] text-xs text-white/20">✦</div>
+        <div className="absolute right-[10%] top-[65%] text-sm text-violet-200/25">✧</div>
       </div>
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-semibold text-white tracking-[0.08em] drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
-            Ecliptica
-          </h1>
-          <p className="text-white/40 mt-2 text-sm">Your personal orbit of life</p>
-        </div>
-
-        <div className="relative rounded-[2rem] p-8 bg-white/[0.06] backdrop-blur-2xl border border-white/20 shadow-[0_0_60px_rgba(139,92,246,0.12),inset_0_1px_0_rgba(255,255,255,0.1)]">
-          <div className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
-
-          <h2 className="text-lg font-medium text-white/95 mb-1 relative">Create account</h2>
-          <p className="text-sm text-white/40 mb-6 relative">Start your orbit</p>
-
-          {error && (
-            <div className="mb-5 text-sm text-red-200/90 bg-red-500/10 border border-red-400/20 rounded-2xl px-4 py-3 relative">
-              {error}
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-10">
+        <div className="w-full max-w-[430px]">
+          <div className="mb-7 text-center">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.28em] text-violet-200/70 backdrop-blur-xl">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,0.9)]" />
+              Begin your journey
             </div>
-          )}
+            <h1 className="text-4xl font-semibold tracking-[0.12em] text-white drop-shadow-[0_0_28px_rgba(167,139,250,0.3)]">
+              ECLIPTICA
+            </h1>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5 relative">
-            <div>
-              <label className="block text-xs font-medium text-white/45 mb-2 tracking-wider uppercase">
-                Full name
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Sneha"
-                className={inputClass}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-white/45 mb-2 tracking-wider uppercase">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className={inputClass}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-white/45 mb-2 tracking-wider uppercase">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className={inputClass}
-                required
-              />
-            </div>
+          <section className="relative overflow-hidden rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-7 shadow-[0_25px_100px_rgba(0,0,0,0.45),0_0_70px_rgba(124,58,237,0.12),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-2xl sm:p-9">
+            <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-violet-400/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-fuchsia-400/10 blur-3xl" />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 py-3.5 rounded-2xl font-medium text-white bg-gradient-to-r from-purple-600/90 to-violet-500/90 hover:from-purple-500 hover:to-violet-400 border border-white/20 shadow-[0_0_32px_rgba(139,92,246,0.35)] hover:shadow-[0_0_48px_rgba(139,92,246,0.5)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-            >
-              {loading ? "Creating account..." : "Create Account"}
-            </button>
-          </form>
+            <div className="relative">
+              <div className="mb-7">
+                <p className="mb-2 text-2xl font-medium tracking-tight text-white">
+                  Create your space <span className="text-violet-300">✦</span>
+                </p>
+                <p className="text-sm leading-6 text-white/40">
+                  A little space for your goals, plans & growth.
+                </p>
+              </div>
 
-          <p className="text-center text-white/40 text-sm mt-8 relative">
-            Already have an account?{" "}
-            <Link to="/login" className="text-purple-300 hover:text-purple-200 font-medium transition">
-              Sign in
-            </Link>
-          </p>
+              {error && (
+                <div role="alert" className="mb-5 rounded-2xl border border-red-300/15 bg-red-400/[0.07] px-4 py-3 text-sm text-red-100/80">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4.5">
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">Full name</label>
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={inputClass} required autoComplete="name" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">Email</label>
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputClass} required autoComplete="email" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">Password</label>
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={`${inputClass} pr-12`} required autoComplete="new-password" />
+                    <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-sm text-white/30 transition hover:text-white/70">
+                      {showPassword ? "◉" : "○"}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" disabled={loading} className="group relative mt-2 w-full overflow-hidden rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 py-3.5 font-medium text-white shadow-[0_0_30px_rgba(139,92,246,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(139,92,246,0.4)] disabled:cursor-not-allowed disabled:opacity-50">
+                  <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                  <span className="relative">{loading ? "Creating your orbit..." : "Create account  ✦"}</span>
+                </button>
+              </form>
+
+              <div className="my-7 flex items-center gap-3">
+                <div className="h-px flex-1 bg-white/[0.07]" />
+                <span className="text-[10px] uppercase tracking-[0.2em] text-white/20">Ecliptica</span>
+                <div className="h-px flex-1 bg-white/[0.07]" />
+              </div>
+
+              <p className="text-center text-sm text-white/35">
+                Already have an account?{" "}
+                <Link to="/login" className="font-medium text-violet-300 transition hover:text-violet-200">Sign in</Link>
+              </p>
+            </div>
+          </section>
+
+          <p className="mt-6 text-center text-[11px] tracking-wide text-white/20">Your journey starts with one small step ✨</p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
