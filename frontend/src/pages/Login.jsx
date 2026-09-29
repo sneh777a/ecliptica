@@ -31,7 +31,7 @@ export default function Login() {
   };
 
   const inputClass =
-    "w-full bg-white/5 border border-white/15 text-white rounded-2xl px-4 py-3.5 text-sm placeholder:text-white/30 focus:outline-none focus:border-purple-400/50 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300";
+    "w-full bg-white/5 border border-white/15 text-white rounded-2xl px-5 py-4 text-base placeholder:text-white/30 focus:outline-none focus:border-purple-400/50 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300";
 
   return (
     <div className="min-h-screen bg-[#07070c] flex items-center justify-center px-4 relative overflow-hidden">
@@ -46,18 +46,18 @@ export default function Login() {
         <div className="absolute top-[60%] left-[40%] w-1 h-1 rounded-full bg-purple-200/50" />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-semibold text-white tracking-[0.08em] drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
+      <div className="w-full max-w-xl relative z-10">
+        <div className="text-center mb-10 sm:mb-12">
+          <h1 className="text-4xl sm:text-5xl font-semibold text-white tracking-[0.08em] drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
             Ecliptica
           </h1>
-          <p className="text-white/40 mt-2 text-sm">Your personal orbit</p>
+          <p className="text-white/40 mt-3 text-base">Your personal orbit</p>
         </div>
 
         {/* glass bubble card */}
         <div
           className="
-            relative rounded-[2rem] p-8
+            relative rounded-[2rem] p-9 sm:p-12
             bg-white/[0.06] backdrop-blur-2xl
             border border-white/20
             shadow-[0_0_60px_rgba(139,92,246,0.12),inset_0_1px_0_rgba(255,255,255,0.1)]
@@ -66,8 +66,8 @@ export default function Login() {
           {/* inner highlight rim */}
           <div className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
 
-          <h2 className="text-lg font-medium text-white/95 mb-1 relative">Welcome back <span className="text-purple-300">✦</span></h2>
-          <p className="text-sm text-white/40 mb-7 relative">Your little space is waiting for you.</p>
+          <h2 className="text-2xl font-medium text-white/95 mb-2 relative">Welcome back <span className="text-purple-300">✦</span></h2>
+          <p className="text-base text-white/40 mb-9 relative">Your little space is waiting for you.</p>
 
           {error && (
             <div className="mb-5 text-sm text-red-200/90 bg-red-500/10 border border-red-400/20 rounded-2xl px-4 py-3 relative">
@@ -75,9 +75,9 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5 relative">
+          <form onSubmit={handleSubmit} className="space-y-7 relative">
             <div>
-              <label className="block text-xs font-medium text-white/45 mb-2 tracking-wider uppercase">
+              <label className="block text-xs font-medium text-white/45 mb-3 tracking-wider uppercase">
                 Email
               </label>
               <input
@@ -92,7 +92,7 @@ export default function Login() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3">
                 <label className="block text-xs font-medium text-white/45 tracking-wider uppercase">
                   Password
                 </label>
@@ -128,7 +128,7 @@ export default function Login() {
               type="submit"
               disabled={loading}
               className="
-                w-full mt-2 py-3.5 rounded-2xl font-medium text-white
+                w-full mt-3 py-4 rounded-2xl font-medium text-white
                 bg-gradient-to-r from-purple-600/90 to-violet-500/90
                 hover:from-purple-500 hover:to-violet-400
                 border border-white/20
@@ -142,7 +142,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-white/40 text-sm mt-8 relative">
+          <p className="text-center text-white/40 text-base mt-9 relative">
             New to Ecliptica?{" "}
             <Link
               to="/register"
