@@ -47,55 +47,105 @@ export default function ForgotPassword() {
               <span className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,0.9)]" />
               Find your way back
             </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold tracking-[0.12em] text-white drop-shadow-[0_0_28px_rgba(167,139,250,0.3)]">ECLIPTICA</h1>
+            <h1 className="text-4xl sm:text-5xl font-semibold tracking-[0.12em] text-white drop-shadow-[0_0_28px_rgba(167,139,250,0.3)]">
+              ECLIPTICA
+            </h1>
           </div>
 
-          <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-9 sm:p-12 shadow-[0_25px_100px_rgba(0,0,0,0.45),0_0_70px_rgba(124,58,237,0.12),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-2xl sm:p-9">
+          <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-9 sm:p-12 shadow-[0_25px_100px_rgba(0,0,0,0.45),0_0_70px_rgba(124,58,237,0.12),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-2xl">
             <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-violet-400/10 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-fuchsia-400/10 blur-3xl" />
 
             <div className="auth-card-content relative">
-              <div className="auth-description mb-9">
-                <p className="mb-2 text-2xl sm:text-3xl font-medium tracking-tight text-white">Forgot your password? <span className="text-violet-300">✦</span></p>
-                <p className="text-sm leading-6 text-white/40">Enter your email and we'll help you get back in.</p>
+              <div className="auth-description mb-10">
+                <p className="mb-3 text-2xl sm:text-3xl font-medium tracking-tight text-white">
+                  Forgot your password? <span className="text-violet-300">✦</span>
+                </p>
+                <p className="text-sm leading-6 text-white/40">
+                  Enter your email and we'll help you get back in.
+                </p>
               </div>
 
-              {error && <div role="alert" className="mb-5 rounded-2xl border border-red-300/15 bg-red-400/[0.07] px-4 py-3 text-sm text-red-100/80">{error}</div>}
+              {error && (
+                <div
+                  role="alert"
+                  className="mb-6 rounded-2xl border border-red-300/15 bg-red-400/[0.07] px-5 py-4 text-sm text-red-100/80"
+                >
+                  {error}
+                </div>
+              )}
 
               {result ? (
-                <div className="space-y-4">
-                  <div className="rounded-2xl border border-emerald-300/10 bg-emerald-400/[0.06] p-4">
-                    <div className="mb-2 text-lg text-emerald-200/90">✦</div>
-                    <p className="text-sm leading-6 text-white/70">{result.message}</p>
+                <div className="flex flex-col gap-6">
+                  <div className="rounded-2xl border border-emerald-300/15 bg-emerald-400/[0.07] px-5 py-5">
+                    <div className="mb-3 text-lg text-emerald-200/90">✦</div>
+                    <p className="text-sm leading-relaxed text-white/75">{result.message}</p>
                   </div>
 
                   {result.reset_token && (
-                    <div className="rounded-2xl border border-violet-300/15 bg-violet-400/[0.06] p-4">
-                      <p className="mb-2 text-xs uppercase tracking-[0.15em] text-violet-200/60">Reset link</p>
-                      <Link to={result.reset_path} className="break-all text-sm text-violet-300 underline decoration-violet-300/30 underline-offset-4 hover:text-violet-200">
+                    <div className="rounded-2xl border border-violet-300/20 bg-violet-400/[0.08] px-5 py-5">
+                      <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.18em] text-violet-200/55">
+                        Reset link
+                      </p>
+                      <Link
+                        to={result.reset_path}
+                        className="inline-flex items-center gap-2 text-sm font-medium text-violet-300 underline decoration-violet-300/30 underline-offset-4 transition hover:text-violet-200"
+                      >
                         Set a new password
+                        <span aria-hidden="true">→</span>
                       </Link>
+                      <p className="mt-3 text-xs leading-5 text-white/30">
+                        This link works for one hour. Keep it private.
+                      </p>
                     </div>
                   )}
 
-                  <Link to="/login" className="block pt-2 text-center text-sm text-white/40 transition hover:text-white/70">Back to sign in</Link>
+                  <Link
+                    to="/login"
+                    className="block pt-2 text-center text-sm text-white/40 transition hover:text-white/70"
+                  >
+                    Back to sign in
+                  </Link>
                 </div>
               ) : (
                 <>
                   <form onSubmit={handleSubmit} className="auth-form space-y-7">
                     <div>
-                      <label className="auth-label mb-3 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">Email</label>
-                      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={`auth-input ${inputClass}`} required autoComplete="email" />
+                      <label className="auth-label mb-3 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className={`auth-input ${inputClass}`}
+                        required
+                        autoComplete="email"
+                      />
                     </div>
 
-                    <button type="submit" disabled={loading} className="auth-button group relative mt-3 w-full overflow-hidden rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 py-4 font-medium text-white shadow-[0_0_30px_rgba(139,92,246,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(139,92,246,0.4)] disabled:cursor-not-allowed disabled:opacity-50">
-                      <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                      <span className="relative">{loading ? "Looking for your orbit..." : "Send reset link  ✦"}</span>
-                    </button>
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="auth-button group relative w-full overflow-hidden rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 py-4 font-medium text-white shadow-[0_0_30px_rgba(139,92,246,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(139,92,246,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                        <span className="relative">
+                          {loading ? "Looking for your orbit..." : "Send reset link  ✦"}
+                        </span>
+                      </button>
+                    </div>
                   </form>
 
-                  <p className="mt-9 text-center text-base text-white/35">
-                    <Link to="/login" className="font-medium text-violet-300 transition hover:text-violet-200">Back to sign in</Link>
+                  <p className="mt-10 text-center text-base text-white/35">
+                    <Link
+                      to="/login"
+                      className="font-medium text-violet-300 transition hover:text-violet-200"
+                    >
+                      Back to sign in
+                    </Link>
                   </p>
                 </>
               )}
