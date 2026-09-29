@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.routers import auth, goals
+from app.routers import auth, goals, password_reset
 from app.database import engine, Base
 from app.models.user import User
 from app.models.goal import Goal, Task
@@ -37,6 +37,9 @@ async def startup():
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP"))
 
 
+# Register the email-based reset route before the legacy auth router.
+# FastAPI uses the first matching route, so the working email flow takes precedence.
+app.include_router(password_reset.router)
 app.include_router(auth.router)
 app.include_router(goals.router)
 
