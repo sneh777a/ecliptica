@@ -16,6 +16,7 @@ app.add_middleware(
         "https://ecliptica-eight.vercel.app",
         "https://ecliptica-mu.vercel.app",
     ],
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,8 +38,7 @@ async def startup():
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP"))
 
 
-# Register the email-based reset route before the legacy auth router.
-# FastAPI uses the first matching route, so the working email flow takes precedence.
+# Email reset route is registered before the legacy auth router.
 app.include_router(password_reset.router)
 app.include_router(auth.router)
 app.include_router(goals.router)
