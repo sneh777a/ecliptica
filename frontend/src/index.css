@@ -36,3 +36,37 @@ select {
 button {
   cursor: pointer;
 }
+
+/* Stable Ecliptica authentication layout */
+.auth-page{min-height:100vh;width:100%;position:relative;overflow:hidden;background:#070817;color:#fff}
+.auth-shell{position:relative;z-index:10;min-height:100vh;width:100%;display:flex;align-items:center;justify-content:center;padding:56px 24px}
+.auth-container{width:100%;max-width:520px;margin:0 auto}
+.auth-brand{text-align:center;margin-bottom:34px}
+.auth-brand h1{margin:0;line-height:1.05}
+.auth-brand p{margin:10px 0 0;line-height:1.4}
+.auth-card{position:relative;width:100%;padding:42px;border-radius:30px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.13);box-shadow:0 25px 100px rgba(0,0,0,.45),0 0 70px rgba(124,58,237,.12),inset 0 1px 0 rgba(255,255,255,.1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.auth-card-content{position:relative}
+.auth-heading{margin:0 0 10px;font-size:28px;line-height:1.25;font-weight:500;letter-spacing:-.02em}
+.auth-description{margin:0 0 32px;font-size:15px;line-height:1.6;color:rgba(255,255,255,.4)}
+.auth-form{display:flex;flex-direction:column;gap:24px}
+.auth-field{width:100%;margin:0}
+.auth-label{display:block;margin:0 0 10px;font-size:11px;line-height:1.4;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.48)}
+.auth-input{display:block;width:100%;height:54px;min-height:54px;padding:0 18px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.2);color:#fff;font-size:15px;line-height:1.4;outline:none;transition:border-color .25s ease,background .25s ease,box-shadow .25s ease}
+.auth-input::placeholder{color:rgba(255,255,255,.2)}
+.auth-input:focus{border-color:rgba(196,181,253,.45);background:rgba(255,255,255,.07);box-shadow:0 0 25px rgba(139,92,246,.13)}
+.auth-password{position:relative}
+.auth-password .auth-input{padding-right:58px}
+.auth-password button{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:rgba(255,255,255,.35);padding:8px;line-height:1}
+.auth-password button:hover{color:rgba(255,255,255,.75)}
+.auth-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.auth-row .auth-label{margin-bottom:0}
+.auth-button{position:relative;display:block;width:100%;min-height:54px;margin-top:2px;padding:0 20px;border-radius:16px;border:1px solid rgba(196,181,253,.2);color:#fff;font-size:15px;font-weight:500;line-height:1.4;background:linear-gradient(90deg,rgba(124,58,237,.95),rgba(168,85,247,.92),rgba(217,70,239,.82));box-shadow:0 0 30px rgba(139,92,246,.25);transition:transform .25s ease,box-shadow .25s ease,opacity .25s ease}
+.auth-button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 45px rgba(139,92,246,.4)}
+.auth-button:disabled{opacity:.5;cursor:not-allowed}
+.auth-footer{margin:30px 0 0;text-align:center;font-size:14px;line-height:1.6;color:rgba(255,255,255,.35)}
+.auth-alert{margin:0 0 24px;padding:13px 16px;border-radius:16px;font-size:14px;line-height:1.5}
+.auth-success{padding:20px;border-radius:18px;text-align:center;line-height:1.6}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:32px 0}
+.auth-divider-line{height:1px;flex:1;background:rgba(255,255,255,.07)}
+.auth-bottom-note{margin:24px 0 0;text-align:center;font-size:11px;letter-spacing:.04em;color:rgba(255,255,255,.2)}
+@media(max-width:640px){.auth-shell{padding:36px 16px}.auth-container{max-width:100%}.auth-card{padding:28px 22px;border-radius:24px}.auth-brand{margin-bottom:28px}.auth-heading{font-size:24px}}
