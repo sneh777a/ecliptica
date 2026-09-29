@@ -33,6 +33,8 @@ async def startup():
         await conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'TODO' NOT NULL"))
         await conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority VARCHAR DEFAULT 'MEDIUM' NOT NULL"))
         await conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token VARCHAR"))
+        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP"))
 
 
 app.include_router(auth.router)
