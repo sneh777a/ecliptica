@@ -15,13 +15,11 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       const res = await axios.post(`${API_URL}/auth/login`, {
         email,
         password,
       });
-
       localStorage.setItem("token", res.data.access_token);
       navigate("/dashboard");
     } catch (err) {
@@ -31,42 +29,75 @@ export default function Login() {
     }
   };
 
+  const inputClass =
+    "w-full bg-white/5 border border-white/15 text-white rounded-2xl px-4 py-3.5 text-sm placeholder:text-white/30 focus:outline-none focus:border-purple-400/50 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300";
+
   return (
-    <div className="min-h-screen bg-[#0b0b0f] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white tracking-wide">Ecliptica</h1>
-          <p className="text-gray-400 mt-2 text-sm">Your personal orbit of life</p>
+    <div className="min-h-screen bg-[#07070c] flex items-center justify-center px-4 relative overflow-hidden">
+      {/* ambient bubbles / glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-[15%] left-[20%] w-72 h-72 rounded-full bg-purple-600/20 blur-[90px]" />
+        <div className="absolute bottom-[20%] right-[15%] w-96 h-96 rounded-full bg-indigo-600/15 blur-[110px]" />
+        <div className="absolute top-[50%] right-[30%] w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[60px]" />
+        {/* small floating dots */}
+        <div className="absolute top-[25%] right-[25%] w-2 h-2 rounded-full bg-purple-300/40 blur-[1px]" />
+        <div className="absolute bottom-[35%] left-[22%] w-1.5 h-1.5 rounded-full bg-white/30" />
+        <div className="absolute top-[60%] left-[40%] w-1 h-1 rounded-full bg-purple-200/50" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-semibold text-white tracking-[0.08em] drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
+            Ecliptica
+          </h1>
+          <p className="text-white/40 mt-2 text-sm">Your personal orbit of life</p>
         </div>
 
-        <div className="bg-[#16161d] border border-gray-800 rounded-2xl p-8 shadow-xl">
-          <h2 className="text-xl font-semibold text-white mb-6">Welcome back</h2>
+        {/* glass bubble card */}
+        <div
+          className="
+            relative rounded-[2rem] p-8
+            bg-white/[0.06] backdrop-blur-2xl
+            border border-white/20
+            shadow-[0_0_60px_rgba(139,92,246,0.12),inset_0_1px_0_rgba(255,255,255,0.1)]
+          "
+        >
+          {/* inner highlight rim */}
+          <div className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
+
+          <h2 className="text-lg font-medium text-white/95 mb-1 relative">Welcome back</h2>
+          <p className="text-sm text-white/40 mb-6 relative">Sign in to continue</p>
 
           {error && (
-            <div className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">
+            <div className="mb-5 text-sm text-red-200/90 bg-red-500/10 border border-red-400/20 rounded-2xl px-4 py-3 relative">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5 relative">
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Email</label>
+              <label className="block text-xs font-medium text-white/45 mb-2 tracking-wider uppercase">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full bg-[#0f0f13] border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500 transition"
+                className={inputClass}
                 required
+                autoComplete="email"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm text-gray-400">Password</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-medium text-white/45 tracking-wider uppercase">
+                  Password
+                </label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-purple-400 hover:text-purple-300"
+                  className="text-xs text-purple-300/90 hover:text-purple-200 transition drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
                 >
                   Forgot password?
                 </Link>
@@ -76,23 +107,36 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-[#0f0f13] border border-gray-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:border-purple-500 transition"
+                className={inputClass}
                 required
+                autoComplete="current-password"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-60 text-white font-medium py-3 rounded-xl transition"
+              className="
+                w-full mt-2 py-3.5 rounded-2xl font-medium text-white
+                bg-gradient-to-r from-purple-600/90 to-violet-500/90
+                hover:from-purple-500 hover:to-violet-400
+                border border-white/20
+                shadow-[0_0_32px_rgba(139,92,246,0.35)]
+                hover:shadow-[0_0_48px_rgba(139,92,246,0.5)]
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transition-all duration-300
+              "
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          <p className="text-center text-gray-400 text-sm mt-6">
+          <p className="text-center text-white/40 text-sm mt-8 relative">
             Don’t have an account?{" "}
-            <Link to="/register" className="text-purple-400 hover:text-purple-300">
+            <Link
+              to="/register"
+              className="text-purple-300 hover:text-purple-200 font-medium transition"
+            >
               Create one
             </Link>
           </p>
