@@ -103,7 +103,7 @@ export default function Login() {
                   Forgot password?
                 </Link>
               </div>
-              <div className="auth-card-content relative">
+              <div className="auth-password relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
