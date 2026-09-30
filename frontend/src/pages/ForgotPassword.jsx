@@ -39,7 +39,7 @@ export default function ForgotPassword() {
             <h1 className="mt-3 text-4xl sm:text-5xl font-semibold tracking-[0.12em]">ECLIPTICA</h1>
           </header>
 
-          <section className="relative overflow-hidden rounded-[28px] border border-white/[0.12] bg-white/[0.055] p-7 sm:p-9 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
+          <section className="relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
             <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
             <div className="relative">
               <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">Forgot your password? <span className="text-violet-300">✦</span></h2>
