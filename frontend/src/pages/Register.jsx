@@ -37,7 +37,7 @@ export default function Register() {
   const field = "w-full h-13 rounded-2xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/20 outline-none transition focus:border-violet-300/40 focus:bg-white/[0.055] focus:shadow-[0_0_24px_rgba(139,92,246,.12)]";
 
   return (
-    <main className="min-h-screen bg-[#070817] text-white relative overflow-hidden">
+    <main className="auth-page min-h-screen bg-[#070817] text-white relative overflow-hidden">
       <AuthCosmos />
       <div className="relative z-10 min-h-screen flex items-center justify-center px-5 py-10">
         <div className="w-full max-w-[520px]">
