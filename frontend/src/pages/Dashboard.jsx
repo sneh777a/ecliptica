@@ -195,10 +195,98 @@ export default function Dashboard() {
       )}
 
       {/*
-        [ Today + Tomorrow ]  [ Calendar + Deadlines ]  [ Health + Finance ]
+        LEFT   → Health + Finance
+        CENTER → Today + Tomorrow (checklist)
+        RIGHT  → Calendar + Deadlines
       */}
-      <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_1fr_1fr]">
-        {/* LEFT: schedules stacked */}
+      <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.2fr_0.95fr]">
+        {/* LEFT: Health + Finance */}
+        <div className="flex flex-col gap-5">
+          <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+                <span className="text-rose-300">♡</span> Health & Wellness
+              </h3>
+              <Link to="/health" className="text-xs text-violet-300/70 hover:text-violet-200">
+                Open →
+              </Link>
+            </div>
+
+            <div className="mb-5">
+              <div className="mb-2 flex items-center justify-between text-xs">
+                <span className="text-white/45">💧 Water Intake</span>
+                <span className="text-white/60">0 / 8 glasses</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full w-0 rounded-full bg-gradient-to-r from-sky-400 to-blue-500" />
+              </div>
+              <div className="mt-3 flex gap-1.5">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-7 flex-1 rounded-md border border-white/10 bg-white/[0.04]"
+                    title="Track on Health page"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <p className="text-[11px] text-white/40">👟 Steps</p>
+                <p className="mt-1 text-sm font-medium text-white/80">— / 10,000</p>
+                <div className="mt-2 h-1 rounded-full bg-white/10">
+                  <div className="h-full w-0 rounded-full bg-cyan-400" />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <p className="text-[11px] text-white/40">☾ Sleep</p>
+                <p className="mt-1 text-sm font-medium text-white/80">— / 8h</p>
+                <div className="mt-2 h-1 rounded-full bg-white/10">
+                  <div className="h-full w-0 rounded-full bg-indigo-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+                <span className="text-amber-300">◈</span> Finance
+              </h3>
+              <Link to="/finance" className="text-xs text-violet-300/70 hover:text-violet-200">
+                Open →
+              </Link>
+            </div>
+
+            <div className="mb-4">
+              <div className="mb-2 flex items-center justify-between text-xs">
+                <span className="text-white/45">Monthly Budget</span>
+                <span className="text-white/60">— / —</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full w-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <p className="text-[11px] text-white/40">Total Spending</p>
+                <p className="mt-1 text-lg font-semibold text-white/85">—</p>
+              </div>
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <p className="text-[11px] text-white/40">Remaining</p>
+                <p className="mt-1 text-lg font-semibold text-emerald-300/90">—</p>
+              </div>
+            </div>
+
+            <p className="mt-4 text-center text-[11px] text-white/25">
+              Connect numbers on the Finance page
+            </p>
+          </div>
+        </div>
+
+        {/* CENTER: Today + Tomorrow checklist */}
         <div className="flex flex-col gap-5">
           <ScheduleCard
             icon="☀"
@@ -228,7 +316,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* CENTER: calendar + deadlines */}
+        {/* RIGHT: Calendar + Deadlines */}
         <div className="flex flex-col gap-5">
           <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.15)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
@@ -318,9 +406,7 @@ export default function Dashboard() {
                         <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
                         <span className="truncate text-sm text-white/80">{e.title}</span>
                       </div>
-                      <span className="shrink-0 text-xs text-white/35">
-                        {e.daysLeft}d
-                      </span>
+                      <span className="shrink-0 text-xs text-white/35">{e.daysLeft}d</span>
                     </li>
                   );
                 })}
@@ -329,94 +415,6 @@ export default function Dashboard() {
             <Link to="/goals" className="mt-3 inline-block text-xs text-violet-300 hover:text-violet-200">
               View all →
             </Link>
-          </div>
-        </div>
-
-        {/* RIGHT: Health + Finance */}
-        <div className="flex flex-col gap-5">
-          {/* Health */}
-          <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
-            <div className="mb-5 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-                <span className="text-rose-300">♡</span> Health & Wellness
-              </h3>
-              <Link to="/health" className="text-xs text-violet-300/70 hover:text-violet-200">
-                Open →
-              </Link>
-            </div>
-
-            <div className="mb-5">
-              <div className="mb-2 flex items-center justify-between text-xs">
-                <span className="text-white/45">💧 Water Intake</span>
-                <span className="text-white/60">0 / 8 glasses</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-0 rounded-full bg-gradient-to-r from-sky-400 to-blue-500" />
-              </div>
-              <div className="mt-3 flex gap-1.5">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-7 flex-1 rounded-md border border-white/10 bg-white/[0.04]"
-                    title="Track on Health page"
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
-                <p className="text-[11px] text-white/40">👟 Steps</p>
-                <p className="mt-1 text-sm font-medium text-white/80">— / 10,000</p>
-                <div className="mt-2 h-1 rounded-full bg-white/10">
-                  <div className="h-full w-0 rounded-full bg-cyan-400" />
-                </div>
-              </div>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
-                <p className="text-[11px] text-white/40">☾ Sleep</p>
-                <p className="mt-1 text-sm font-medium text-white/80">— / 8h</p>
-                <div className="mt-2 h-1 rounded-full bg-white/10">
-                  <div className="h-full w-0 rounded-full bg-indigo-400" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Finance */}
-          <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
-            <div className="mb-5 flex items-center justify-between">
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-                <span className="text-amber-300">◈</span> Finance
-              </h3>
-              <Link to="/finance" className="text-xs text-violet-300/70 hover:text-violet-200">
-                Open →
-              </Link>
-            </div>
-
-            <div className="mb-4">
-              <div className="mb-2 flex items-center justify-between text-xs">
-                <span className="text-white/45">Monthly Budget</span>
-                <span className="text-white/60">— / —</span>
-              </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full w-[0%] rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
-                <p className="text-[11px] text-white/40">Total Spending</p>
-                <p className="mt-1 text-lg font-semibold text-white/85">—</p>
-              </div>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
-                <p className="text-[11px] text-white/40">Remaining</p>
-                <p className="mt-1 text-lg font-semibold text-emerald-300/90">—</p>
-              </div>
-            </div>
-
-            <p className="mt-4 text-center text-[11px] text-white/25">
-              Connect numbers on the Finance page
-            </p>
           </div>
         </div>
       </div>
