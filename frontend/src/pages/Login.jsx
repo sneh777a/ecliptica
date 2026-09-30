@@ -2,18 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthCosmos from "../components/AuthCosmos";
-
-const API_URL = "https://ecliptica-api.onrender.com";
-
-function formatError(err) {
-  const detail = err?.response?.data?.detail;
-  if (Array.isArray(detail)) {
-    return detail.map((e) => e.msg || JSON.stringify(e)).join(", ");
-  }
-  if (typeof detail === "string") return detail;
-  if (detail && typeof detail === "object") return JSON.stringify(detail);
-  return err?.message || "Login failed";
-}
+import { API_URL, formatApiError } from "../api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -32,7 +21,7 @@ export default function Login() {
       localStorage.setItem("token", res.data.access_token);
       navigate("/dashboard");
     } catch (err) {
-      setError(formatError(err));
+      setError(formatApiError(err, "Login failed"));
     } finally {
       setLoading(false);
     }
