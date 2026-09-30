@@ -269,7 +269,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_0_28px_rgba(139,92,246,0.07),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-medium tracking-[0.18em] text-amber-300/60 uppercase">
@@ -334,7 +334,7 @@ export default function Dashboard() {
         </div>
 
         <aside className="flex min-w-0 flex-col gap-5">
-          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_0_28px_rgba(139,92,246,0.07),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
             <div className="mb-5 flex items-center justify-between">
               <button
                 type="button"
@@ -391,7 +391,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_0_28px_rgba(139,92,246,0.07),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-[10px] tracking-[0.18em] text-violet-300/50 uppercase">Coming up</p>
@@ -447,7 +447,7 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
   const list = asArray(tasks);
 
   return (
-    <section className="relative flex min-h-[285px] flex-1 flex-col overflow-hidden rounded-[30px] border border-white/[0.1] bg-white/[0.055] p-5 shadow-[0_20px_70px_rgba(0,0,0,0.2)] backdrop-blur-2xl sm:p-6">
+    <section className="relative flex min-h-[285px] flex-1 flex-col overflow-hidden rounded-[30px] border border-white/[0.1] bg-white/[0.055] p-5 shadow-[0_0_34px_rgba(139,92,246,0.08),0_20px_70px_rgba(0,0,0,0.2)] backdrop-blur-2xl sm:p-6">
       <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-500/10 blur-3xl" />
       <div className="relative mb-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
