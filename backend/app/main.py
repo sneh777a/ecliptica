@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.routers import auth, goals, password_reset
+from app.routers import auth, goals
 from app.database import engine, Base
 from app.models.user import User
 from app.models.goal import Goal, Task
@@ -28,18 +28,29 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-        # Safe schema update for existing Render/Neon databases.
-        # create_all() does not add newly introduced columns to an existing table.
-        await conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS description VARCHAR DEFAULT ''"))
-        await conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'TODO' NOT NULL"))
-        await conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority VARCHAR DEFAULT 'MEDIUM' NOT NULL"))
-        await conn.execute(text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"))
+        # Safe schema updates for existing Neon tables
+        await conn.execute(
+            text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS description VARCHAR DEFAULT ''")
+        )
+        await conn.execute(
+            text("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'TODO' NOT NULL")
+        )
+        await conn.execute(
+            text(
+                "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS priority VARCHAR DEFAULT 'MEDIUM' NOT NULL"
+            )
+        )
+        await conn.execute(
+            text(
+                "ALTER TABLE tasks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            )
+        )
         await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token VARCHAR"))
-        await conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP"))
+        await conn.execute(
+            text("ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP")
+        )
 
 
-# Email reset route is registered before the legacy auth router.
-app.include_router(password_reset.router)
 app.include_router(auth.router)
 app.include_router(goals.router)
 
