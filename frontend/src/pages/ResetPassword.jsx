@@ -20,24 +20,12 @@ export default function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (password !== confirm) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-    if (!token) {
-      setError("Missing reset token. Request a new link.");
-      return;
-    }
+    if (password !== confirm) return setError("Passwords do not match");
+    if (password.length < 6) return setError("Password must be at least 6 characters");
+    if (!token) return setError("Missing reset token. Request a new link.");
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/auth/reset-password`, {
-        token,
-        new_password: password,
-      });
+      await axios.post(`${API_URL}/auth/reset-password`, { token, new_password: password });
       setDone(true);
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
@@ -47,113 +35,64 @@ export default function ResetPassword() {
     }
   };
 
-  const inputClass =
-    "box-border w-full bg-white/5 border border-white/15 text-white rounded-2xl px-6 py-5 text-[17px] placeholder:text-white/30 focus:outline-none focus:border-purple-400/50 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300";
+  const field = "w-full h-13 rounded-2xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/20 outline-none transition focus:border-violet-300/40 focus:bg-white/[0.055] focus:shadow-[0_0_24px_rgba(139,92,246,.12)]";
 
   return (
-    <div className="min-h-screen bg-[#07070c] flex items-center justify-center px-6 py-12 relative overflow-hidden">
+    <main className="min-h-screen bg-[#070817] text-white relative overflow-hidden">
       <AuthCosmos />
-
-      <div className="w-full max-w-2xl relative z-10">
-        <div className="text-center mb-12 sm:mb-14">
-          <h1 className="text-5xl sm:text-6xl font-semibold text-white tracking-[0.08em] drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
-            Ecliptica
-          </h1>
-          <p className="text-white/40 mt-4 text-lg">Your personal orbit</p>
-        </div>
-
-        <div className="relative box-border rounded-[2rem] px-10 py-12 sm:px-14 sm:py-14 bg-white/[0.06] backdrop-blur-2xl border border-white/20 shadow-[0_0_60px_rgba(139,92,246,0.12),inset_0_1px_0_rgba(255,255,255,0.1)]">
-          <div className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
-
-          <h2 className="relative text-3xl font-medium text-white/95 mb-3">
-            Set a new password <span className="text-purple-300">✦</span>
-          </h2>
-          <p className="relative text-lg text-white/40 mb-12">
-            Choose something secure for your next chapter.
-          </p>
-
-          {error && (
-            <div className="relative mb-8 text-base text-red-200/90 bg-red-500/10 border border-red-400/20 rounded-2xl px-5 py-4">
-              {error}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-5 py-10">
+        <div className="w-full max-w-[520px]">
+          <header className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-violet-200/10 bg-white/[0.035] px-3.5 py-1.5 text-[10px] uppercase tracking-[0.24em] text-violet-200/65 backdrop-blur-xl">
+              <span className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,.9)]" />
+              One last step
             </div>
-          )}
+            <h1 className="mt-3 text-4xl sm:text-5xl font-semibold tracking-[0.12em]">ECLIPTICA</h1>
+          </header>
 
-          {done ? (
-            <div className="relative rounded-2xl border border-white/15 bg-white/5 px-6 py-8 text-center">
-              <p className="text-base text-white/75">Password updated successfully.</p>
-              <p className="mt-3 text-sm text-white/35">Taking you back to sign in…</p>
+          <section className="relative overflow-hidden rounded-[28px] border border-white/[0.12] bg-white/[0.055] p-7 sm:p-9 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
+            <div className="pointer-events-none absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
+            <div className="relative">
+              <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">Set a new password <span className="text-violet-300">✦</span></h2>
+              <p className="mt-2 text-sm leading-6 text-white/38">Choose something secure for your next chapter.</p>
+
+              {error && <div role="alert" className="mt-6 rounded-2xl border border-rose-300/15 bg-rose-400/[0.055] px-4 py-3 text-sm text-rose-100/75">{error}</div>}
+
+              {done ? (
+                <div className="mt-7 rounded-2xl border border-violet-200/10 bg-white/[0.025] px-5 py-6 text-center">
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-violet-200/10 bg-violet-300/[0.07] text-violet-200">✦</div>
+                  <p className="text-sm text-white/75">Password updated successfully.</p>
+                  <p className="mt-2 text-xs text-white/30">Taking you back to sign in...</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+                  <div>
+                    <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">New password</label>
+                    <div className="relative">
+                      <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={field + " pr-14"} />
+                      <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-white/30 hover:text-white/70 transition">{showPassword ? "Hide" : "Show"}</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">Confirm password</label>
+                    <div className="relative">
+                      <input type={showConfirm ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={field + " pr-14"} />
+                      <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-white/30 hover:text-white/70 transition">{showConfirm ? "Hide" : "Show"}</button>
+                    </div>
+                  </div>
+                  <button type="submit" disabled={loading} className="mt-2 w-full h-13 rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 text-sm font-medium shadow-[0_0_30px_rgba(139,92,246,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_0_42px_rgba(139,92,246,.32)] disabled:opacity-50">
+                    {loading ? "Updating..." : "Update password  ✦"}
+                  </button>
+                </form>
+              )}
+
+              <p className="mt-7 border-t border-white/[0.07] pt-6 text-center text-sm text-white/30">
+                <Link to="/login" className="text-violet-300 hover:text-violet-200 transition">Back to sign in</Link>
+              </p>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="relative space-y-9">
-              <div>
-                <label className="block text-xs font-medium text-white/45 mb-3.5 tracking-wider uppercase">
-                  New password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className={`${inputClass} pr-14`}
-                    required
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 text-base text-white/30 hover:text-white/70"
-                  >
-                    {showPassword ? "◉" : "○"}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-white/45 mb-3.5 tracking-wider uppercase">
-                  Confirm password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirm ? "text" : "password"}
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    placeholder="••••••••"
-                    className={`${inputClass} pr-14`}
-                    required
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm((v) => !v)}
-                    aria-label={showConfirm ? "Hide password" : "Show password"}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 px-2 py-1 text-base text-white/30 hover:text-white/70"
-                  >
-                    {showConfirm ? "◉" : "○"}
-                  </button>
-                </div>
-              </div>
-
-              <div className="pt-3">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-5 rounded-2xl text-lg font-medium text-white bg-gradient-to-r from-purple-600/90 to-violet-500/90 hover:from-purple-500 hover:to-violet-400 border border-white/20 shadow-[0_0_32px_rgba(139,92,246,0.35)] disabled:opacity-50 transition-all duration-300"
-                >
-                  {loading ? "Updating…" : "Update password  ✦"}
-                </button>
-              </div>
-            </form>
-          )}
-
-          <p className="relative text-center text-white/40 text-base mt-12">
-            <Link to="/login" className="text-purple-300 hover:text-purple-200 font-medium">
-              Back to sign in
-            </Link>
-          </p>
+          </section>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
