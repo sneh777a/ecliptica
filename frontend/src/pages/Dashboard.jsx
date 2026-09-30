@@ -191,6 +191,13 @@ export default function Dashboard() {
       <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-violet-600/15 blur-[110px]" />
       <div className="pointer-events-none absolute right-10 top-0 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-20 left-1/2 h-56 w-56 rounded-full bg-cyan-500/5 blur-[110px]" />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <span className="absolute left-[12%] top-[12%] h-1 w-1 rounded-full bg-violet-200/80 shadow-[0_0_12px_rgba(196,181,253,0.9)]" />
+        <span className="absolute left-[42%] top-[6%] h-1.5 w-1.5 rounded-full bg-white/70 shadow-[0_0_14px_rgba(255,255,255,0.9)]" />
+        <span className="absolute right-[18%] top-[10%] h-1 w-1 rounded-full bg-fuchsia-200/80 shadow-[0_0_14px_rgba(232,121,249,0.9)]" />
+        <span className="absolute right-[8%] top-[42%] h-1.5 w-1.5 rounded-full bg-violet-200/70 shadow-[0_0_15px_rgba(196,181,253,0.8)]" />
+        <span className="absolute left-[6%] bottom-[18%] h-1 w-1 rounded-full bg-cyan-200/60 shadow-[0_0_12px_rgba(103,232,249,0.7)]" />
+      </div>
 
       <header className="relative mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -250,7 +257,7 @@ export default function Dashboard() {
                 {Array.from({ length: 8 }).map((_, i) => (
                   <span
                     key={i}
-                    className="h-8 flex-1 rounded-lg border border-white/[0.06] bg-white/[0.035]"
+                    className="h-8 flex-1 rounded-lg border border-violet-200/[0.10] bg-gradient-to-b from-violet-300/[0.10] to-white/[0.025] shadow-[inset_0_-5px_12px_rgba(139,92,246,0.06)]"
                   />
                 ))}
               </div>
@@ -269,7 +276,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_0_28px_rgba(139,92,246,0.07),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+          <div className="rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-5 shadow-[0_0_32px_rgba(139,92,246,0.11),inset_0_1px_0_rgba(255,255,255,0.04),0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-medium tracking-[0.18em] text-amber-300/60 uppercase">
@@ -334,7 +341,7 @@ export default function Dashboard() {
         </div>
 
         <aside className="flex min-w-0 flex-col gap-5">
-          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_0_28px_rgba(139,92,246,0.07),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+          <div className="rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-5 shadow-[0_0_32px_rgba(139,92,246,0.11),inset_0_1px_0_rgba(255,255,255,0.04),0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
             <div className="mb-5 flex items-center justify-between">
               <button
                 type="button"
@@ -347,7 +354,7 @@ export default function Dashboard() {
               </button>
               <div className="text-center">
                 <p className="text-[10px] tracking-[0.16em] text-violet-300/50 uppercase">Orbit</p>
-                <h2 className="mt-0.5 text-sm font-semibold text-white">{calendar.label}</h2>
+                <h2 className="mt-0.5 text-sm font-semibold text-white drop-shadow-[0_0_10px_rgba(196,181,253,0.25)]">{calendar.label}</h2>
               </div>
               <button
                 type="button"
@@ -377,7 +384,7 @@ export default function Dashboard() {
                     key={iso}
                     className={`relative flex aspect-square items-center justify-center rounded-full text-xs ${
                       isToday
-                        ? "bg-violet-500/80 font-semibold text-white shadow-[0_0_20px_rgba(139,92,246,0.45)]"
+                        ? "bg-violet-500/85 font-semibold text-white shadow-[0_0_28px_rgba(139,92,246,0.65),0_0_8px_rgba(217,180,254,0.35)]"
                         : "text-white/45 hover:bg-white/[0.05]"
                     }`}
                   >
@@ -391,7 +398,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_0_28px_rgba(139,92,246,0.07),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+          <div className="rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-5 shadow-[0_0_32px_rgba(139,92,246,0.11),inset_0_1px_0_rgba(255,255,255,0.04),0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-[10px] tracking-[0.18em] text-violet-300/50 uppercase">Coming up</p>
@@ -447,7 +454,7 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
   const list = asArray(tasks);
 
   return (
-    <section className="relative flex min-h-[285px] flex-1 flex-col overflow-hidden rounded-[30px] border border-white/[0.1] bg-white/[0.055] p-5 shadow-[0_0_34px_rgba(139,92,246,0.08),0_20px_70px_rgba(0,0,0,0.2)] backdrop-blur-2xl sm:p-6">
+    <section className="relative flex min-h-[285px] flex-1 flex-col overflow-hidden rounded-[30px] border border-violet-200/[0.14] bg-gradient-to-br from-white/[0.075] via-white/[0.05] to-violet-500/[0.03] p-5 shadow-[0_0_42px_rgba(139,92,246,0.13),inset_0_1px_0_rgba(255,255,255,0.05),0_20px_70px_rgba(0,0,0,0.24)] backdrop-blur-2xl sm:p-6">
       <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-500/10 blur-3xl" />
       <div className="relative mb-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -465,7 +472,7 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
       </div>
 
       {list.length === 0 ? (
-        <div className="relative flex flex-1 flex-col items-center justify-center rounded-[24px] border border-dashed border-white/[0.08] bg-white/[0.018] px-4 py-10 text-center">
+        <div className="relative flex flex-1 flex-col items-center justify-center rounded-[24px] border border-dashed border-violet-200/[0.10] bg-gradient-to-br from-violet-500/[0.035] to-white/[0.012] shadow-[inset_0_0_30px_rgba(139,92,246,0.035)] px-4 py-10 text-center">
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10 text-violet-300/50">
             ✦
           </div>
