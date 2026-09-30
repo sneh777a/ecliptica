@@ -20,10 +20,10 @@ export default function Layout() {
       </div>
 
       <div className="relative z-10 flex min-h-screen">
-        <aside className="hidden w-[250px] shrink-0 border-r border-white/[0.08] bg-white/[0.025] px-5 py-6 backdrop-blur-2xl lg:flex lg:flex-col">
-          <button onClick={() => navigate("/dashboard")} className="mb-10 text-left">
+        <aside className="hidden w-[250px] shrink-0 border-r border-violet-300/[0.10] bg-gradient-to-b from-[#0d0a24]/95 via-[#08091b]/95 to-[#070817]/98] px-5 py-7 backdrop-blur-2xl shadow-[8px_0_40px_rgba(91,33,182,0.08)] lg:flex lg:flex-col">
+          <button onClick={() => navigate("/dashboard")} className="mb-11 text-left">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-violet-300/20 bg-violet-500/10 text-lg text-violet-200">✦</div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-violet-300/20 bg-gradient-to-br from-fuchsia-400/15 to-violet-500/15 text-lg text-violet-100 shadow-[0_0_24px_rgba(139,92,246,0.16)]">✦</div>
               <div>
                 <h1 className="text-xl font-semibold tracking-wide">Ecliptica</h1>
                 <p className="mt-0.5 text-[11px] tracking-[0.18em] text-white/30 uppercase">Personal orbit</p>
@@ -35,9 +35,9 @@ export default function Layout() {
             <p className="mb-4 px-3 text-[10px] font-semibold tracking-[0.2em] text-white/25 uppercase">Navigate</p>
             {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} className={({ isActive }) =>
-                "group flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-sm transition-all " +
+                "group flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-sm transition-all duration-300 " +
                 (isActive
-                  ? "border-violet-300/15 bg-violet-500/10 text-violet-200"
+                  ? "border-violet-300/20 bg-gradient-to-r from-violet-600/25 to-fuchsia-500/10 text-violet-100 shadow-[0_0_24px_rgba(124,58,237,0.16)]"
                   : "border-transparent text-white/40 hover:bg-white/[0.045] hover:text-white/80")
               }>
                 <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-white/[0.04] text-sm text-violet-200/80">{item.icon}</span>
