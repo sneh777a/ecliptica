@@ -224,7 +224,9 @@ export default function Dashboard() {
 
       <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[0.82fr_1.45fr_0.93fr]">
         <aside className="flex flex-col gap-5">
-          <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+          <div className="relative overflow-hidden rounded-[28px] border border-violet-300/[0.12] bg-white/[0.045] p-5 shadow-[0_0_35px_rgba(139,92,246,0.08),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-violet-500/15 blur-3xl" />
+            <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-fuchsia-500/10 blur-3xl" />
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-medium tracking-[0.18em] text-rose-300/60 uppercase">
