@@ -99,7 +99,6 @@ export default function Dashboard() {
   const nearDeadlines = useMemo(() => {
     const limit = addDays(today, 10);
     const items = [];
-
     goals.forEach((g) => {
       if (!g.deadline) return;
       const d = startOfDay(new Date(g.deadline));
@@ -108,11 +107,9 @@ export default function Dashboard() {
           id: `goal-${g.id}`,
           title: g.title,
           daysLeft: Math.round((d - today) / 86400000),
-          kind: "goal",
         });
       }
     });
-
     tasks.forEach((t) => {
       if (!t.date || t.done) return;
       const d = startOfDay(new Date(t.date));
@@ -121,13 +118,11 @@ export default function Dashboard() {
           id: `task-${t.id}`,
           title: t.text,
           daysLeft: Math.round((d - today) / 86400000),
-          kind: "task",
         });
       }
     });
-
     items.sort((a, b) => a.daysLeft - b.daysLeft);
-    return items.slice(0, 8);
+    return items.slice(0, 6);
   }, [goals, tasks, today]);
 
   const calendar = useMemo(() => {
@@ -179,7 +174,7 @@ export default function Dashboard() {
   return (
     <div className="relative pb-8">
       <div className="pointer-events-none absolute -right-10 top-0 h-64 w-64 rounded-full bg-violet-600/20 blur-[100px]" />
-      <div className="pointer-events-none absolute left-1/3 top-40 h-40 w-40 rounded-full bg-fuchsia-500/10 blur-[80px]" />
+      <div className="pointer-events-none absolute left-1/4 top-48 h-40 w-40 rounded-full bg-fuchsia-500/10 blur-[80px]" />
 
       <header className="relative mb-8">
         <p className="mb-1 flex items-center gap-2 text-sm text-violet-300/80">
@@ -199,41 +194,42 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Exact layout:
-          [ Today's Schedule ] [ Tomorrow's Schedule ] [ Calendar     ]
-                                                     [ Deadlines    ]
+      {/*
+        [ Today + Tomorrow ]  [ Calendar + Deadlines ]  [ Health + Finance ]
       */}
-      <div className="relative grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-[1fr_1fr_minmax(280px,340px)] xl:items-start">
-        <ScheduleCard
-          icon="☀"
-          title="Today's Schedule"
-          dateLabel={today.toLocaleDateString("en", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-          tasks={todayTasks}
-          onToggle={toggleTask}
-          emptyText="No plans for today yet"
-        />
+      <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_1fr_1fr]">
+        {/* LEFT: schedules stacked */}
+        <div className="flex flex-col gap-5">
+          <ScheduleCard
+            icon="☀"
+            title="Today's Schedule"
+            dateLabel={today.toLocaleDateString("en", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+            tasks={todayTasks}
+            onToggle={toggleTask}
+            emptyText="No plans for today yet"
+          />
+          <ScheduleCard
+            icon="☾"
+            title="Tomorrow's Schedule"
+            dateLabel={tomorrow.toLocaleDateString("en", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+            tasks={tomorrowTasks}
+            onToggle={toggleTask}
+            emptyText="Nothing scheduled for tomorrow"
+          />
+        </div>
 
-        <ScheduleCard
-          icon="☾"
-          title="Tomorrow's Schedule"
-          dateLabel={tomorrow.toLocaleDateString("en", {
-            weekday: "short",
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-          tasks={tomorrowTasks}
-          onToggle={toggleTask}
-          emptyText="Nothing scheduled for tomorrow"
-        />
-
-        {/* Right stack: Calendar on top, Deadlines under it */}
-        <div className="flex flex-col gap-5 md:col-span-2 xl:col-span-1">
+        {/* CENTER: calendar + deadlines */}
+        <div className="flex flex-col gap-5">
           <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.15)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
               <button
@@ -256,7 +252,6 @@ export default function Dashboard() {
                 ›
               </button>
             </div>
-
             <div className="mb-2 grid grid-cols-7 gap-1 text-center">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
                 <div key={d} className="py-1 text-[10px] font-medium text-white/30">
@@ -264,7 +259,6 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-
             <div className="grid grid-cols-7 gap-1">
               {calendar.cells.map((d, i) => {
                 if (!d) return <div key={`e-${i}`} className="aspect-square" />;
@@ -288,9 +282,12 @@ export default function Dashboard() {
                 );
               })}
             </div>
+            <p className="mt-5 text-center text-xs leading-relaxed text-violet-200/50">
+              ✦ A little progress each day adds up to big results
+            </p>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.12)] backdrop-blur-xl">
+          <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
                 <span className="text-violet-300">◷</span> Upcoming Deadlines
@@ -299,13 +296,10 @@ export default function Dashboard() {
                 < 10 days
               </span>
             </div>
-
             {nearDeadlines.length === 0 ? (
-              <p className="py-6 text-center text-sm text-white/30">
-                No deadlines in the next 10 days
-              </p>
+              <p className="py-4 text-center text-sm text-white/30">None in the next 10 days</p>
             ) : (
-              <ul className="space-y-2.5">
+              <ul className="space-y-2">
                 {nearDeadlines.map((e, idx) => {
                   const dot =
                     e.daysLeft <= 2
@@ -318,27 +312,111 @@ export default function Dashboard() {
                   return (
                     <li
                       key={e.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.05] bg-white/[0.03] px-3 py-2.5"
+                      className="flex items-center justify-between gap-2 rounded-xl border border-white/[0.05] bg-white/[0.03] px-3 py-2.5"
                     >
-                      <div className="flex min-w-0 items-center gap-2.5">
+                      <div className="flex min-w-0 items-center gap-2">
                         <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
                         <span className="truncate text-sm text-white/80">{e.title}</span>
                       </div>
                       <span className="shrink-0 text-xs text-white/35">
-                        Due in {e.daysLeft} day{e.daysLeft === 1 ? "" : "s"}
+                        {e.daysLeft}d
                       </span>
                     </li>
                   );
                 })}
               </ul>
             )}
-
-            <Link
-              to="/goals"
-              className="mt-4 inline-block text-xs text-violet-300 hover:text-violet-200"
-            >
-              View all events →
+            <Link to="/goals" className="mt-3 inline-block text-xs text-violet-300 hover:text-violet-200">
+              View all →
             </Link>
+          </div>
+        </div>
+
+        {/* RIGHT: Health + Finance */}
+        <div className="flex flex-col gap-5">
+          {/* Health */}
+          <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+                <span className="text-rose-300">♡</span> Health & Wellness
+              </h3>
+              <Link to="/health" className="text-xs text-violet-300/70 hover:text-violet-200">
+                Open →
+              </Link>
+            </div>
+
+            <div className="mb-5">
+              <div className="mb-2 flex items-center justify-between text-xs">
+                <span className="text-white/45">💧 Water Intake</span>
+                <span className="text-white/60">0 / 8 glasses</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full w-0 rounded-full bg-gradient-to-r from-sky-400 to-blue-500" />
+              </div>
+              <div className="mt-3 flex gap-1.5">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-7 flex-1 rounded-md border border-white/10 bg-white/[0.04]"
+                    title="Track on Health page"
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <p className="text-[11px] text-white/40">👟 Steps</p>
+                <p className="mt-1 text-sm font-medium text-white/80">— / 10,000</p>
+                <div className="mt-2 h-1 rounded-full bg-white/10">
+                  <div className="h-full w-0 rounded-full bg-cyan-400" />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <p className="text-[11px] text-white/40">☾ Sleep</p>
+                <p className="mt-1 text-sm font-medium text-white/80">— / 8h</p>
+                <div className="mt-2 h-1 rounded-full bg-white/10">
+                  <div className="h-full w-0 rounded-full bg-indigo-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Finance */}
+          <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+                <span className="text-amber-300">◈</span> Finance
+              </h3>
+              <Link to="/finance" className="text-xs text-violet-300/70 hover:text-violet-200">
+                Open →
+              </Link>
+            </div>
+
+            <div className="mb-4">
+              <div className="mb-2 flex items-center justify-between text-xs">
+                <span className="text-white/45">Monthly Budget</span>
+                <span className="text-white/60">— / —</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full w-[0%] rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <p className="text-[11px] text-white/40">Total Spending</p>
+                <p className="mt-1 text-lg font-semibold text-white/85">—</p>
+              </div>
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
+                <p className="text-[11px] text-white/40">Remaining</p>
+                <p className="mt-1 text-lg font-semibold text-emerald-300/90">—</p>
+              </div>
+            </div>
+
+            <p className="mt-4 text-center text-[11px] text-white/25">
+              Connect numbers on the Finance page
+            </p>
           </div>
         </div>
       </div>
@@ -348,7 +426,7 @@ export default function Dashboard() {
 
 function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
   return (
-    <div className="flex min-h-[420px] flex-col rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.12)] backdrop-blur-xl">
+    <div className="flex flex-1 flex-col rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.12)] backdrop-blur-xl">
       <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-base font-semibold text-white">
           <span className="text-violet-300">{icon}</span> {title}
@@ -357,7 +435,7 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
       </div>
 
       {tasks.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 px-4 py-10 text-center">
           <p className="text-sm text-white/30">{emptyText}</p>
           <Link to="/goals" className="mt-2 text-sm text-violet-300 hover:text-violet-200">
             Add on Goals →
@@ -372,9 +450,7 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
                 onClick={() => onToggle(t.id)}
                 className="group flex w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-[#1a1a32]/90 text-left transition hover:border-violet-400/25 hover:bg-[#1e1e3a]"
               >
-                <div
-                  className={`w-1.5 shrink-0 bg-gradient-to-b ${ACCENTS[i % ACCENTS.length]}`}
-                />
+                <div className={`w-1.5 shrink-0 bg-gradient-to-b ${ACCENTS[i % ACCENTS.length]}`} />
                 <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] text-white/40">{t.time || "Anytime"}</p>
@@ -386,7 +462,7 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
                       {t.text}
                     </p>
                   </div>
-                  <span className="shrink-0 text-white/25 transition group-hover:text-violet-300">
+                  <span className="shrink-0 text-white/25 group-hover:text-violet-300">
                     {t.done ? "✓" : "›"}
                   </span>
                 </div>
