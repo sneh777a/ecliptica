@@ -199,7 +199,7 @@ export default function Dashboard() {
         CENTER → Today + Tomorrow (checklist)
         RIGHT  → Calendar + Deadlines
       */}
-      <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.2fr_0.95fr]">
+      <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[0.85fr_1.3fr_0.95fr]">
         {/* LEFT: Health + Finance */}
         <div className="flex flex-col gap-5">
           <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
@@ -286,7 +286,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* CENTER: Today + Tomorrow checklist */}
+        {/* CENTER: Today + Tomorrow checklist — main focus */}
         <div className="flex flex-col gap-5">
           <ScheduleCard
             icon="☀"
@@ -316,7 +316,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* RIGHT: Calendar + Deadlines */}
+        {/* RIGHT: Calendar + Deadlines (< 10 days) */}
         <div className="flex flex-col gap-5">
           <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.15)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
