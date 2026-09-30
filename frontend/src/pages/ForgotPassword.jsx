@@ -27,7 +27,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <main className="min-h-screen bg-[#070817] text-white relative overflow-hidden">
+    <main className="auth-page min-h-screen bg-[#070817] text-white relative overflow-hidden">
       <AuthCosmos />
       <div className="relative z-10 min-h-screen flex items-center justify-center px-5 py-10">
         <div className="w-full max-w-[520px]">
