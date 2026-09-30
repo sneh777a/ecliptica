@@ -354,7 +354,7 @@ export default function Dashboard() {
                 <span className="text-violet-300">◷</span> Upcoming Deadlines
               </h3>
               <span className="rounded-full border border-violet-400/30 bg-violet-500/15 px-2.5 py-0.5 text-[10px] font-medium text-violet-200">
-                &lt; 10 days
+                {"under 10 days"}
               </span>
             </div>
             {nearDeadlines.length === 0 ? (
