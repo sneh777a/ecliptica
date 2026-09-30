@@ -126,3 +126,60 @@ button {
   box-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
   animation: planet-orbit 14s linear infinite;
 }
+
+/* ---- Auth page layout ---- */
+.auth-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #070817;
+}
+
+.auth-page > .relative.z-10 {
+  min-height: 100vh;
+  min-height: 100svh;
+  align-items: flex-start !important;
+  padding-top: clamp(42px, 7vh, 72px) !important;
+  padding-bottom: 48px !important;
+}
+
+.auth-page > .relative.z-10 > div {
+  width: min(100%, 560px);
+}
+
+.auth-page header {
+  margin-bottom: 34px !important;
+}
+
+.auth-page section {
+  width: 100%;
+}
+
+.auth-page input,
+.auth-page button {
+  flex-shrink: 0;
+}
+
+@media (max-height: 800px) {
+  .auth-page > .relative.z-10 {
+    padding-top: 28px !important;
+  }
+
+  .auth-page header {
+    margin-bottom: 24px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-page > .relative.z-10 {
+    padding-top: 32px !important;
+    padding-bottom: 32px !important;
+  }
+
+  .auth-page > .relative.z-10 > div {
+    width: 100%;
+  }
+}
