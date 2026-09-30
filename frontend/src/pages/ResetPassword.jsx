@@ -47,80 +47,119 @@ export default function ResetPassword() {
   };
 
   const inputClass =
-    "w-full bg-black/20 border border-white/10 text-white rounded-2xl px-5 py-4 text-base placeholder:text-white/20 focus:outline-none focus:border-violet-300/45 focus:bg-white/[0.07] focus:shadow-[0_0_25px_rgba(139,92,246,0.13)] transition-all duration-300";
+    "w-full bg-white/5 border border-white/15 text-white rounded-2xl px-5 py-4 text-base placeholder:text-white/30 focus:outline-none focus:border-purple-400/50 focus:bg-white/10 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)] transition-all duration-300";
 
   return (
-    <main className="auth-page relative min-h-screen overflow-hidden bg-[#070817] text-white">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px]" />
-        <div className="absolute -right-32 top-1/4 h-[30rem] w-[30rem] rounded-full bg-fuchsia-500/10 blur-[130px]" />
-        <div className="absolute bottom-[-12rem] left-1/3 h-[32rem] w-[32rem] rounded-full bg-indigo-500/15 blur-[140px]" />
-        <div className="absolute left-[12%] top-[20%] h-1 w-1 animate-pulse rounded-full bg-white/70 shadow-[0_0_12px_rgba(255,255,255,0.8)]" />
-        <div className="absolute right-[17%] top-[17%] h-1 w-1 animate-pulse rounded-full bg-white/60" />
-        <div className="absolute left-[8%] top-[52%] text-xs text-white/20">✦</div>
-        <div className="absolute right-[10%] top-[65%] text-sm text-violet-200/25">✧</div>
+    <div className="min-h-screen bg-[#07070c] flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-[15%] left-[20%] w-72 h-72 rounded-full bg-purple-600/20 blur-[90px]" />
+        <div className="absolute bottom-[20%] right-[15%] w-96 h-96 rounded-full bg-indigo-600/15 blur-[110px]" />
+        <div className="absolute top-[50%] right-[30%] w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[60px]" />
+        <div className="absolute top-[25%] right-[25%] w-2 h-2 rounded-full bg-purple-300/40 blur-[1px]" />
+        <div className="absolute bottom-[35%] left-[22%] w-1.5 h-1.5 rounded-full bg-white/30" />
       </div>
 
-      <div className="auth-shell relative z-10 flex min-h-screen items-center justify-center px-5 py-10">
-        <div className="auth-container w-full max-w-xl">
-          <div className="auth-brand mb-10 text-center sm:mb-12">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-[10px] font-medium uppercase tracking-[0.28em] text-violet-200/70 backdrop-blur-xl">
-              <span className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,0.9)]" />
-              One last step
+      <div className="w-full max-w-xl relative z-10">
+        <div className="text-center mb-10 sm:mb-12">
+          <h1 className="text-4xl sm:text-5xl font-semibold text-white tracking-[0.08em] drop-shadow-[0_0_24px_rgba(168,85,247,0.35)]">
+            Ecliptica
+          </h1>
+          <p className="text-white/40 mt-3 text-base">Your personal orbit</p>
+        </div>
+
+        <div className="relative rounded-[2rem] p-9 sm:p-12 bg-white/[0.06] backdrop-blur-2xl border border-white/20 shadow-[0_0_60px_rgba(139,92,246,0.12),inset_0_1px_0_rgba(255,255,255,0.1)]">
+          <div className="pointer-events-none absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-white/10" />
+
+          <h2 className="relative text-2xl font-medium text-white/95 mb-2">
+            Set a new password <span className="text-purple-300">✦</span>
+          </h2>
+          <p className="relative text-base text-white/40 mb-9">
+            Choose something secure for your next chapter.
+          </p>
+
+          {error && (
+            <div className="relative mb-5 text-sm text-red-200/90 bg-red-500/10 border border-red-400/20 rounded-2xl px-4 py-3">
+              {error}
             </div>
-            <h1 className="text-4xl sm:text-5xl font-semibold tracking-[0.12em] text-white drop-shadow-[0_0_28px_rgba(167,139,250,0.3)]">ECLIPTICA</h1>
-          </div>
+          )}
 
-          <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.13] bg-white/[0.055] p-9 sm:p-12 shadow-[0_25px_100px_rgba(0,0,0,0.45),0_0_70px_rgba(124,58,237,0.12),inset_0_1px_0_rgba(255,255,255,0.10)] backdrop-blur-2xl sm:p-9">
-            <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-violet-400/10 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-16 h-44 w-44 rounded-full bg-fuchsia-400/10 blur-3xl" />
-
-            <div className="auth-card-content relative">
-              <div className="auth-description mb-9">
-                <p className="mb-2 text-2xl sm:text-3xl font-medium tracking-tight text-white">Set a new password <span className="text-violet-300">✦</span></p>
-                <p className="text-sm leading-6 text-white/40">Choose something secure for your next chapter.</p>
+          {done ? (
+            <div className="relative rounded-2xl border border-white/15 bg-white/5 px-5 py-6 text-center">
+              <p className="text-sm text-white/75">Password updated successfully.</p>
+              <p className="mt-2 text-xs text-white/35">Taking you back to sign in…</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="relative space-y-7">
+              <div>
+                <label className="block text-xs font-medium text-white/45 mb-3 tracking-wider uppercase">
+                  New password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={`${inputClass} pr-12`}
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-sm text-white/30 hover:text-white/70 transition"
+                  >
+                    {showPassword ? "◉" : "○"}
+                  </button>
+                </div>
               </div>
 
-              {error && <div role="alert" className="mb-5 rounded-2xl border border-red-300/15 bg-red-400/[0.07] px-4 py-3 text-sm text-red-100/80">{error}</div>}
-
-              {done ? (
-                <div className="rounded-2xl border border-emerald-300/10 bg-emerald-400/[0.06] p-5 text-center">
-                  <div className="mb-2 text-2xl text-emerald-200/90">✦</div>
-                  <p className="text-sm leading-6 text-white/70">Password updated successfully.</p>
-                  <p className="mt-1 text-xs text-white/30">Taking you back to sign in…</p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="auth-form space-y-7">
-                  <div>
-                    <label className="auth-label mb-3 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">New password</label>
-                    <div className="auth-password relative">
-                      <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={`auth-input ${inputClass} pr-12`} required autoComplete="new-password" />
-                      <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-sm text-white/30 transition hover:text-white/70">{showPassword ? "◉" : "○"}</button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-xs font-medium uppercase tracking-[0.16em] text-white/45">Confirm password</label>
-                    <div className="auth-password relative">
-                      <input type={showConfirm ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" className={`auth-input ${inputClass} pr-12`} required autoComplete="new-password" />
-                      <button type="button" onClick={() => setShowConfirm((value) => !value)} aria-label={showConfirm ? "Hide password" : "Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-sm text-white/30 transition hover:text-white/70">{showConfirm ? "◉" : "○"}</button>
-                    </div>
-                  </div>
-
-                  <button type="submit" disabled={loading} className="auth-button group relative mt-3 w-full overflow-hidden rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 py-4 font-medium text-white shadow-[0_0_30px_rgba(139,92,246,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_0_45px_rgba(139,92,246,0.4)] disabled:cursor-not-allowed disabled:opacity-50">
-                    <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                    <span className="relative">{loading ? "Updating your orbit..." : "Update password  ✦"}</span>
+              <div>
+                <label className="block text-xs font-medium text-white/45 mb-3 tracking-wider uppercase">
+                  Confirm password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder="••••••••"
+                    className={`${inputClass} pr-12`}
+                    required
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    aria-label={showConfirm ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-sm text-white/30 hover:text-white/70 transition"
+                  >
+                    {showConfirm ? "◉" : "○"}
                   </button>
-                </form>
-              )}
+                </div>
+              </div>
 
-              <p className="mt-9 text-center text-base text-white/35">
-                <Link to="/login" className="font-medium text-violet-300 transition hover:text-violet-200">Back to sign in</Link>
-              </p>
-            </div>
-          </section>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full mt-3 py-4 rounded-2xl font-medium text-white bg-gradient-to-r from-purple-600/90 to-violet-500/90 hover:from-purple-500 hover:to-violet-400 border border-white/20 shadow-[0_0_32px_rgba(139,92,246,0.35)] hover:shadow-[0_0_48px_rgba(139,92,246,0.5)] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                {loading ? "Updating…" : "Update password  ✦"}
+              </button>
+            </form>
+          )}
+
+          <p className="relative text-center text-white/40 text-base mt-9">
+            <Link
+              to="/login"
+              className="text-purple-300 hover:text-purple-200 font-medium transition"
+            >
+              Back to sign in
+            </Link>
+          </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
