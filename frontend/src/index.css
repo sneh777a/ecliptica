@@ -209,3 +209,23 @@ button {
 .auth-card button[aria-label]{color:rgba(255,255,255,.58)!important}
 .auth-card button[aria-label]:hover{color:#fff!important}
 @media(max-width:640px){.auth-shell{padding:34px 16px 44px}.auth-container{max-width:100%}.auth-brand{margin-bottom:30px}.auth-brand h1{font-size:42px}.auth-card{padding:34px 24px 32px;border-radius:24px}.auth-form{gap:20px}}
+
+
+/* ===== Final auth spacing polish ===== */
+.auth-shell{align-items:flex-start;padding-top:clamp(58px,8vh,92px);padding-bottom:72px}
+.auth-brand{margin-bottom:40px}
+.auth-card{min-height:500px}
+.auth-card-content{min-height:100%}
+.auth-card h2{margin-bottom:0}
+.auth-card h2 + p{margin-top:10px}
+.auth-form{margin-top:36px;gap:26px}
+.auth-form>div{min-width:0}
+.auth-form>div>div{min-width:0}
+.auth-input{font-size:15px!important}
+.auth-card .auth-button{margin-top:4px!important}
+@media(max-width:640px){
+  .auth-shell{padding-top:38px;padding-bottom:48px}
+  .auth-brand{margin-bottom:30px}
+  .auth-card{min-height:480px}
+  .auth-form{margin-top:30px;gap:22px}
+}
