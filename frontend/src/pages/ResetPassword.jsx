@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import AuthCosmos from "../components/AuthCosmos";
-
-const API_URL = "https://ecliptica-api.onrender.com";
+import { API_URL, formatApiError } from "../api";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -25,17 +24,21 @@ export default function ResetPassword() {
     if (!token) return setError("Missing reset token. Request a new link.");
     setLoading(true);
     try {
-      await axios.post(`${API_URL}/auth/reset-password`, { token, new_password: password });
+      await axios.post(`${API_URL}/auth/reset-password`, {
+        token,
+        new_password: password,
+      });
       setDone(true);
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setError(err.response?.data?.detail || "Reset failed");
+      setError(formatApiError(err, "Reset failed"));
     } finally {
       setLoading(false);
     }
   };
 
-  const field = "w-full h-13 rounded-2xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/20 outline-none transition focus:border-violet-300/40 focus:bg-white/[0.055] focus:shadow-[0_0_24px_rgba(139,92,246,.12)]";
+  const field =
+    "w-full h-13 rounded-2xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/20 outline-none transition focus:border-violet-300/40 focus:bg-white/[0.055] focus:shadow-[0_0_24px_rgba(139,92,246,.12)]";
 
   return (
     <main className="auth-page min-h-screen bg-[#070817] text-white relative overflow-hidden">
@@ -53,41 +56,92 @@ export default function ResetPassword() {
           <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
             <div className="auth-card-content">
-              <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">Set a new password <span className="text-violet-300">✦</span></h2>
-              <p className="mt-2 text-sm leading-6 text-white/38">Choose something secure for your next chapter.</p>
+              <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">
+                Set a new password <span className="text-violet-300">✦</span>
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-white/38">
+                Choose something secure for your next chapter.
+              </p>
 
-              {error && <div role="alert" className="mt-6 rounded-2xl border border-rose-300/15 bg-rose-400/[0.055] px-4 py-3 text-sm text-rose-100/75">{error}</div>}
+              {error && (
+                <div
+                  role="alert"
+                  className="mt-6 rounded-2xl border border-rose-300/15 bg-rose-400/[0.055] px-4 py-3 text-sm text-rose-100/75"
+                >
+                  {error}
+                </div>
+              )}
 
               {done ? (
                 <div className="mt-7 rounded-2xl border border-violet-200/10 bg-white/[0.025] px-5 py-6 text-center">
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-violet-200/10 bg-violet-300/[0.07] text-violet-200">✦</div>
+                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-violet-200/10 bg-violet-300/[0.07] text-violet-200">
+                    ✦
+                  </div>
                   <p className="text-sm text-white/75">Password updated successfully.</p>
                   <p className="mt-2 text-xs text-white/30">Taking you back to sign in...</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="auth-form space-y-5">
                   <div>
-                    <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">New password</label>
+                    <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                      New password
+                    </label>
                     <div className="relative">
-                      <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={"auth-input " + field + " pr-14"} />
-                      <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-violet-200/80 hover:text-white transition">{showPassword ? "Hide" : "Show"}</button>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        autoComplete="new-password"
+                        className={"auth-input " + field + " pr-14"}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-violet-200/80 hover:text-white transition"
+                      >
+                        {showPassword ? "Hide" : "Show"}
+                      </button>
                     </div>
                   </div>
                   <div>
-                    <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">Confirm password</label>
+                    <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                      Confirm password
+                    </label>
                     <div className="relative">
-                      <input type={showConfirm ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={"auth-input " + field + " pr-14"} />
-                      <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-white/30 hover:text-white/70 transition">{showConfirm ? "Hide" : "Show"}</button>
+                      <input
+                        type={showConfirm ? "text" : "password"}
+                        value={confirm}
+                        onChange={(e) => setConfirm(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        autoComplete="new-password"
+                        className={"auth-input " + field + " pr-14"}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirm((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-white/30 hover:text-white/70 transition"
+                      >
+                        {showConfirm ? "Hide" : "Show"}
+                      </button>
                     </div>
                   </div>
-                  <button type="submit" disabled={loading} className="auth-button mt-2 w-full h-13 rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 text-sm font-medium shadow-[0_0_30px_rgba(139,92,246,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_0_42px_rgba(139,92,246,.32)] disabled:opacity-50">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="auth-button mt-2 w-full h-13 rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 text-sm font-medium shadow-[0_0_30px_rgba(139,92,246,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_0_42px_rgba(139,92,246,.32)] disabled:opacity-50"
+                  >
                     {loading ? "Updating..." : "Update password  ✦"}
                   </button>
                 </form>
               )}
 
               <p className="mt-7 border-t border-white/[0.07] pt-6 text-center text-sm text-white/30">
-                <Link to="/login" className="text-violet-300 hover:text-violet-200 transition">Back to sign in</Link>
+                <Link to="/login" className="text-violet-300 hover:text-violet-200 transition">
+                  Back to sign in
+                </Link>
               </p>
             </div>
           </section>
