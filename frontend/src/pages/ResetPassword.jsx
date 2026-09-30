@@ -41,16 +41,16 @@ export default function ResetPassword() {
     <main className="auth-page min-h-screen bg-[#070817] text-white relative overflow-hidden">
       <AuthCosmos />
       <div className="auth-shell">
-        <div className="w-full max-w-[520px]">
-          <header className="text-center mb-8">
+        <div className="auth-container">
+          <header className="auth-brand">
             <div className="inline-flex items-center gap-2 rounded-full border border-violet-200/10 bg-white/[0.035] px-3.5 py-1.5 text-[10px] uppercase tracking-[0.24em] text-violet-200/65 backdrop-blur-xl">
               <span className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,.9)]" />
               One last step
             </div>
-            <h1 className="mt-3 text-4xl sm:text-5xl font-semibold tracking-[0.12em]">ECLIPTICA</h1>
+            <h1>ECLIPTICA</h1>
           </header>
 
-          <section className="relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
+          <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
             <div className="auth-card-content">
               <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">Set a new password <span className="text-violet-300">✦</span></h2>
@@ -65,22 +65,22 @@ export default function ResetPassword() {
                   <p className="mt-2 text-xs text-white/30">Taking you back to sign in...</p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+                <form onSubmit={handleSubmit} className="auth-form space-y-5">
                   <div>
                     <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">New password</label>
                     <div className="relative">
-                      <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={field + " pr-14"} />
+                      <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={"auth-input " + field + " pr-14"} />
                       <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-violet-200/80 hover:text-white transition">{showPassword ? "Hide" : "Show"}</button>
                     </div>
                   </div>
                   <div>
                     <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">Confirm password</label>
                     <div className="relative">
-                      <input type={showConfirm ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={field + " pr-14"} />
+                      <input type={showConfirm ? "text" : "password"} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={"auth-input " + field + " pr-14"} />
                       <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-white/30 hover:text-white/70 transition">{showConfirm ? "Hide" : "Show"}</button>
                     </div>
                   </div>
-                  <button type="submit" disabled={loading} className="mt-2 w-full h-13 rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 text-sm font-medium shadow-[0_0_30px_rgba(139,92,246,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_0_42px_rgba(139,92,246,.32)] disabled:opacity-50">
+                  <button type="submit" disabled={loading} className="auth-button mt-2 w-full h-13 rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 text-sm font-medium shadow-[0_0_30px_rgba(139,92,246,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_0_42px_rgba(139,92,246,.32)] disabled:opacity-50">
                     {loading ? "Updating..." : "Update password  ✦"}
                   </button>
                 </form>
