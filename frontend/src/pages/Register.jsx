@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import AuthCosmos from "../components/AuthCosmos";
-
-const API_URL = "https://ecliptica-api.onrender.com";
+import { API_URL, formatApiError } from "../api";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -28,13 +27,14 @@ export default function Register() {
       localStorage.setItem("token", loginRes.data.access_token);
       navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.detail || "Registration failed");
+      setError(formatApiError(err, "Registration failed"));
     } finally {
       setLoading(false);
     }
   };
 
-  const field = "w-full h-[60px] rounded-2xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/20 outline-none transition focus:border-violet-300/40 focus:bg-white/[0.055] focus:shadow-[0_0_24px_rgba(139,92,246,.12)]";
+  const field =
+    "w-full h-[60px] rounded-2xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/20 outline-none transition focus:border-violet-300/40 focus:bg-white/[0.055] focus:shadow-[0_0_24px_rgba(139,92,246,.12)]";
 
   return (
     <main className="auth-page min-h-screen bg-[#070817] text-white relative overflow-hidden">
@@ -52,42 +52,111 @@ export default function Register() {
           <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
             <div className="auth-card-content">
-              <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">Create your space <span className="text-violet-300">✦</span></h2>
-              <p className="mt-2 text-sm leading-6 text-white/38">A little space for your goals, plans & growth.</p>
+              <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">
+                Create your space <span className="text-violet-300">✦</span>
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-white/38">
+                A little space for your goals, plans & growth.
+              </p>
 
-              {error && <div role="alert" className="mt-6 rounded-2xl border border-rose-300/15 bg-rose-400/[0.055] px-4 py-3 text-sm text-rose-100/75">{error}</div>}
+              {error && (
+                <div
+                  role="alert"
+                  className="mt-6 rounded-2xl border border-rose-300/15 bg-rose-400/[0.055] px-4 py-3 text-sm text-rose-100/75"
+                >
+                  {error}
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="auth-form space-y-4.5">
                 <div>
-                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">Full name</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required autoComplete="name" className={field} />
+                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                    Full name
+                  </label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Your name"
+                    required
+                    autoComplete="name"
+                    className={field}
+                  />
                 </div>
                 <div>
-                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">Email</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email" className={field} />
+                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    required
+                    autoComplete="email"
+                    className={field}
+                  />
                 </div>
                 <div>
-                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">Password</label>
+                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                    Password
+                  </label>
                   <div className="relative">
-                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={field + " pr-14"} />
-                    <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-violet-200/80 hover:text-white transition">{showPassword ? "Hide" : "Show"}</button>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      autoComplete="new-password"
+                      className={field + " pr-14"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-violet-200/80 hover:text-white transition"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
                   </div>
                 </div>
                 <div>
-                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">Confirm password</label>
+                  <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
+                    Confirm password
+                  </label>
                   <div className="relative">
-                    <input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={field + " pr-14"} />
-                    <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-white/30 hover:text-white/70 transition">{showConfirmPassword ? "Hide" : "Show"}</button>
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      autoComplete="new-password"
+                      className={field + " pr-14"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-white/30 hover:text-white/70 transition"
+                    >
+                      {showConfirmPassword ? "Hide" : "Show"}
+                    </button>
                   </div>
                 </div>
-                <button type="submit" disabled={loading} className="auth-button relative mt-3 w-full h-[60px] overflow-hidden rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 text-sm font-medium shadow-[0_0_30px_rgba(139,92,246,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_0_42px_rgba(139,92,246,.32)] disabled:opacity-50">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="auth-button relative mt-3 w-full h-[60px] overflow-hidden rounded-2xl border border-violet-200/20 bg-gradient-to-r from-violet-600/90 via-purple-500/90 to-fuchsia-500/80 text-sm font-medium shadow-[0_0_30px_rgba(139,92,246,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_0_42px_rgba(139,92,246,.32)] disabled:opacity-50"
+                >
                   {loading ? "Creating your orbit..." : "Create account  ✦"}
                 </button>
               </form>
 
               <div className="mt-7 border-t border-white/[0.07] pt-6 text-center text-sm text-white/30">
                 Already have an account?{" "}
-                <Link to="/login" className="text-violet-300 hover:text-violet-200 transition">Sign in</Link>
+                <Link to="/login" className="text-violet-300 hover:text-violet-200 transition">
+                  Sign in
+                </Link>
               </div>
             </div>
           </section>
