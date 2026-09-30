@@ -40,16 +40,16 @@ export default function Register() {
     <main className="auth-page min-h-screen bg-[#070817] text-white relative overflow-hidden">
       <AuthCosmos />
       <div className="auth-shell">
-        <div className="w-full max-w-[520px]">
-          <header className="text-center mb-8">
+        <div className="auth-container">
+          <header className="auth-brand">
             <div className="inline-flex items-center gap-2 rounded-full border border-violet-200/10 bg-white/[0.035] px-3.5 py-1.5 text-[10px] uppercase tracking-[0.24em] text-violet-200/65 backdrop-blur-xl">
               <span className="h-1.5 w-1.5 rounded-full bg-violet-300 shadow-[0_0_10px_rgba(196,181,253,.9)]" />
               Begin your journey
             </div>
-            <h1 className="mt-3 text-4xl sm:text-5xl font-semibold tracking-[0.12em]">ECLIPTICA</h1>
+            <h1>ECLIPTICA</h1>
           </header>
 
-          <section className="relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
+          <section className="auth-card relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
             <div className="auth-card-content">
               <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">Create your space <span className="text-violet-300">✦</span></h2>
@@ -57,7 +57,7 @@ export default function Register() {
 
               {error && <div role="alert" className="mt-6 rounded-2xl border border-rose-300/15 bg-rose-400/[0.055] px-4 py-3 text-sm text-rose-100/75">{error}</div>}
 
-              <form onSubmit={handleSubmit} className="mt-7 space-y-4.5">
+              <form onSubmit={handleSubmit} className="auth-form space-y-4.5">
                 <div>
                   <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">Full name</label>
                   <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required autoComplete="name" className={field} />
