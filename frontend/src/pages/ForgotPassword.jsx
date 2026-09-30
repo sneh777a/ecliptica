@@ -29,7 +29,7 @@ export default function ForgotPassword() {
   return (
     <main className="auth-page min-h-screen bg-[#070817] text-white relative overflow-hidden">
       <AuthCosmos />
-      <div className="relative z-10 min-h-screen flex items-start justify-center px-5 pt-14 pb-16 sm:pt-16 sm:pb-20">
+      <div className="auth-shell">
         <div className="w-full max-w-[520px]">
           <header className="text-center mb-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-violet-200/10 bg-white/[0.035] px-3.5 py-1.5 text-[10px] uppercase tracking-[0.24em] text-violet-200/65 backdrop-blur-xl">
@@ -41,7 +41,7 @@ export default function ForgotPassword() {
 
           <section className="relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
             <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-violet-500/10 blur-3xl" />
-            <div className="relative">
+            <div className="auth-card-content">
               <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">Forgot your password? <span className="text-violet-300">✦</span></h2>
               <p className="mt-2 text-sm leading-6 text-white/38">Enter your email and we'll help you find your way back.</p>
 
