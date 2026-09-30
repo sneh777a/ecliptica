@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
+import AuthCosmos from "../components/AuthCosmos";
 
 const API_URL = "https://ecliptica-api.onrender.com";
 
@@ -51,13 +52,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen bg-[#07070c] flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[15%] left-[20%] w-72 h-72 rounded-full bg-purple-600/20 blur-[90px]" />
-        <div className="absolute bottom-[20%] right-[15%] w-96 h-96 rounded-full bg-indigo-600/15 blur-[110px]" />
-        <div className="absolute top-[50%] right-[30%] w-40 h-40 rounded-full bg-fuchsia-500/10 blur-[60px]" />
-        <div className="absolute top-[25%] right-[25%] w-2 h-2 rounded-full bg-purple-300/40 blur-[1px]" />
-        <div className="absolute bottom-[35%] left-[22%] w-1.5 h-1.5 rounded-full bg-white/30" />
-      </div>
+      <AuthCosmos />
 
       <div className="w-full max-w-xl relative z-10">
         <div className="text-center mb-10 sm:mb-12">
