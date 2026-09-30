@@ -40,7 +40,7 @@ export default function ResetPassword() {
   return (
     <main className="auth-page min-h-screen bg-[#070817] text-white relative overflow-hidden">
       <AuthCosmos />
-      <div className="relative z-10 min-h-screen flex items-start justify-center px-5 pt-14 pb-16 sm:pt-16 sm:pb-20">
+      <div className="auth-shell">
         <div className="w-full max-w-[520px]">
           <header className="text-center mb-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-violet-200/10 bg-white/[0.035] px-3.5 py-1.5 text-[10px] uppercase tracking-[0.24em] text-violet-200/65 backdrop-blur-xl">
@@ -52,7 +52,7 @@ export default function ResetPassword() {
 
           <section className="relative overflow-hidden rounded-[30px] border border-white/[0.12] bg-white/[0.055] p-8 sm:p-10 backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,.45),0_0_60px_rgba(124,58,237,.1)]">
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl" />
-            <div className="relative">
+            <div className="auth-card-content">
               <h2 className="text-2xl sm:text-[27px] font-medium tracking-tight">Set a new password <span className="text-violet-300">✦</span></h2>
               <p className="mt-2 text-sm leading-6 text-white/38">Choose something secure for your next chapter.</p>
 
@@ -70,7 +70,7 @@ export default function ResetPassword() {
                     <label className="mb-2.5 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">New password</label>
                     <div className="relative">
                       <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="new-password" className={field + " pr-14"} />
-                      <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-violet-200/65 hover:text-violet-100 transition">{showPassword ? "Hide" : "Show"}</button>
+                      <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl px-2 py-1.5 text-xs text-violet-200/80 hover:text-white transition">{showPassword ? "Hide" : "Show"}</button>
                     </div>
                   </div>
                   <div>
