@@ -171,7 +171,7 @@ export default function Dashboard() {
             ✦ Your personal orbit
           </p>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            {greet}, Sneha
+            {greet}
           </h1>
           <p className="mt-2 max-w-xl text-sm text-white/40">
             A calm little space to see what matters today.
@@ -192,7 +192,6 @@ export default function Dashboard() {
       )}
 
       <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[0.82fr_1.45fr_0.93fr]">
-        {/* LEFT — Health + Finance */}
         <aside className="flex flex-col gap-5">
           <div className="group rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition hover:border-violet-300/15">
             <div className="mb-5 flex items-center justify-between">
@@ -200,7 +199,10 @@ export default function Dashboard() {
                 <p className="text-[10px] font-medium tracking-[0.18em] text-rose-300/60 uppercase">Wellbeing</p>
                 <h2 className="mt-1 text-base font-semibold text-white">♡ Health</h2>
               </div>
-              <Link to="/health" className="rounded-xl border border-white/[0.07] bg-white/[0.035] px-2.5 py-1.5 text-xs text-white/40 transition hover:bg-white/[0.07] hover:text-white/75">
+              <Link
+                to="/health"
+                className="rounded-xl border border-white/[0.07] bg-white/[0.035] px-2.5 py-1.5 text-xs text-white/40 transition hover:bg-white/[0.07] hover:text-white/75"
+              >
                 Open
               </Link>
             </div>
@@ -212,7 +214,10 @@ export default function Dashboard() {
               </div>
               <div className="mt-3 flex gap-1.5">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <span key={i} className="h-8 flex-1 rounded-lg border border-white/[0.06] bg-white/[0.035]" />
+                  <span
+                    key={i}
+                    className="h-8 flex-1 rounded-lg border border-white/[0.06] bg-white/[0.035]"
+                  />
                 ))}
               </div>
             </div>
@@ -237,7 +242,10 @@ export default function Dashboard() {
                 <p className="text-[10px] font-medium tracking-[0.18em] text-amber-300/60 uppercase">Money</p>
                 <h2 className="mt-1 text-base font-semibold text-white">◈ Finance</h2>
               </div>
-              <Link to="/finance" className="rounded-xl border border-white/[0.07] bg-white/[0.035] px-2.5 py-1.5 text-xs text-white/40 transition hover:bg-white/[0.07] hover:text-white/75">
+              <Link
+                to="/finance"
+                className="rounded-xl border border-white/[0.07] bg-white/[0.035] px-2.5 py-1.5 text-xs text-white/40 transition hover:bg-white/[0.07] hover:text-white/75"
+              >
                 Open
               </Link>
             </div>
@@ -265,12 +273,15 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        {/* CENTER — Main focus */}
         <main className="flex min-w-0 flex-col gap-5">
           <ScheduleCard
             icon="☀"
             title="Today"
-            dateLabel={today.toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}
+            dateLabel={today.toLocaleDateString("en", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
             tasks={todayTasks}
             onToggle={toggleTask}
             emptyText="Your day is open"
@@ -278,26 +289,49 @@ export default function Dashboard() {
           <ScheduleCard
             icon="☾"
             title="Tomorrow"
-            dateLabel={tomorrow.toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}
+            dateLabel={tomorrow.toLocaleDateString("en", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
             tasks={tomorrowTasks}
             onToggle={toggleTask}
             emptyText="Nothing planned yet"
           />
         </main>
 
-        {/* RIGHT — Calendar + Deadlines */}
         <aside className="flex min-w-0 flex-col gap-5">
           <div className="rounded-[28px] border border-white/[0.09] bg-white/[0.045] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
             <div className="mb-5 flex items-center justify-between">
-              <button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))} className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.04] text-white/35 transition hover:bg-white/[0.08] hover:text-white">‹</button>
+              <button
+                type="button"
+                onClick={() =>
+                  setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.04] text-white/35 transition hover:bg-white/[0.08] hover:text-white"
+              >
+                ‹
+              </button>
               <div className="text-center">
                 <p className="text-[10px] tracking-[0.16em] text-violet-300/50 uppercase">Orbit</p>
                 <h2 className="mt-0.5 text-sm font-semibold text-white">{calendar.label}</h2>
               </div>
-              <button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))} className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.04] text-white/35 transition hover:bg-white/[0.08] hover:text-white">›</button>
+              <button
+                type="button"
+                onClick={() =>
+                  setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))
+                }
+                className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.04] text-white/35 transition hover:bg-white/[0.08] hover:text-white"
+              >
+                ›
+              </button>
             </div>
             <div className="mb-2 grid grid-cols-7 gap-1 text-center">
-              {["S","M","T","W","T","F","S"].map((d, i) => <div key={i} className="py-1 text-[10px] font-medium text-white/25">{d}</div>)}
+              {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                <div key={i} className="py-1 text-[10px] font-medium text-white/25">
+                  {d}
+                </div>
+              ))}
             </div>
             <div className="grid grid-cols-7 gap-1">
               {calendar.cells.map((d, i) => {
@@ -306,9 +340,18 @@ export default function Dashboard() {
                 const isToday = iso === todayStr;
                 const hasDot = taskDates.has(iso);
                 return (
-                  <div key={iso} className={`relative flex aspect-square items-center justify-center rounded-full text-xs transition ${isToday ? "bg-violet-500/80 font-semibold text-white shadow-[0_0_20px_rgba(139,92,246,0.45)]" : "text-white/45 hover:bg-white/[0.05]"}`}>
+                  <div
+                    key={iso}
+                    className={`relative flex aspect-square items-center justify-center rounded-full text-xs transition ${
+                      isToday
+                        ? "bg-violet-500/80 font-semibold text-white shadow-[0_0_20px_rgba(139,92,246,0.45)]"
+                        : "text-white/45 hover:bg-white/[0.05]"
+                    }`}
+                  >
                     {d}
-                    {hasDot && !isToday && <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-violet-300/80" />}
+                    {hasDot && !isToday && (
+                      <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-violet-300/80" />
+                    )}
                   </div>
                 );
               })}
@@ -322,7 +365,7 @@ export default function Dashboard() {
                 <h2 className="mt-1 text-base font-semibold text-white">Deadlines</h2>
               </div>
               <span className="rounded-full border border-violet-300/15 bg-violet-400/10 px-2.5 py-1 text-[10px] text-violet-200/65">
-                &lt; 10 days
+                under 10 days
               </span>
             </div>
             {nearDeadlines.length === 0 ? (
@@ -333,15 +376,31 @@ export default function Dashboard() {
             ) : (
               <ul className="space-y-2">
                 {nearDeadlines.map((e, idx) => (
-                  <li key={e.id} className="flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.025] px-3 py-3">
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${e.daysLeft <= 2 ? "bg-rose-400" : e.daysLeft <= 5 ? "bg-amber-400" : idx % 2 === 0 ? "bg-violet-400" : "bg-cyan-400"}`} />
+                  <li
+                    key={e.id}
+                    className="flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.025] px-3 py-3"
+                  >
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${
+                        e.daysLeft <= 2
+                          ? "bg-rose-400"
+                          : e.daysLeft <= 5
+                            ? "bg-amber-400"
+                            : idx % 2 === 0
+                              ? "bg-violet-400"
+                              : "bg-cyan-400"
+                      }`}
+                    />
                     <span className="min-w-0 flex-1 truncate text-xs text-white/65">{e.title}</span>
                     <span className="shrink-0 text-[10px] text-white/30">{e.daysLeft}d</span>
                   </li>
                 ))}
               </ul>
             )}
-            <Link to="/goals" className="mt-4 inline-flex text-xs text-violet-300/65 transition hover:text-violet-200">
+            <Link
+              to="/goals"
+              className="mt-4 inline-flex text-xs text-violet-300/65 transition hover:text-violet-200"
+            >
               View goals →
             </Link>
           </div>
@@ -350,8 +409,7 @@ export default function Dashboard() {
     </div>
   );
 }
-  );
-}
+
 function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
   return (
     <section className="relative flex min-h-[285px] flex-1 flex-col overflow-hidden rounded-[30px] border border-white/[0.1] bg-white/[0.055] p-5 shadow-[0_20px_70px_rgba(0,0,0,0.2)] backdrop-blur-2xl sm:p-6">
@@ -373,9 +431,14 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
 
       {tasks.length === 0 ? (
         <div className="relative flex flex-1 flex-col items-center justify-center rounded-[24px] border border-dashed border-white/[0.08] bg-white/[0.018] px-4 py-10 text-center">
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10 text-violet-300/50">✦</div>
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10 text-violet-300/50">
+            ✦
+          </div>
           <p className="text-sm text-white/35">{emptyText}</p>
-          <Link to="/goals" className="mt-2 text-xs text-violet-300/60 transition hover:text-violet-200">
+          <Link
+            to="/goals"
+            className="mt-2 text-xs text-violet-300/60 transition hover:text-violet-200"
+          >
             Add something →
           </Link>
         </div>
@@ -383,15 +446,31 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
         <ul className="relative space-y-2.5">
           {tasks.map((t, i) => (
             <li key={t.id}>
-              <button type="button" onClick={() => onToggle(t.id)} className="group flex w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-[#101327]/70 text-left transition duration-300 hover:-translate-y-0.5 hover:border-violet-300/20 hover:bg-[#151934] hover:shadow-[0_8px_30px_rgba(139,92,246,0.08)]">
+              <button
+                type="button"
+                onClick={() => onToggle(t.id)}
+                className="group flex w-full overflow-hidden rounded-2xl border border-white/[0.06] bg-[#101327]/70 text-left transition duration-300 hover:-translate-y-0.5 hover:border-violet-300/20 hover:bg-[#151934] hover:shadow-[0_8px_30px_rgba(139,92,246,0.08)]"
+              >
                 <div className={`w-1 shrink-0 bg-gradient-to-b ${ACCENTS[i % ACCENTS.length]}`} />
                 <div className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3.5">
-                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs ${t.done ? "border-violet-300/30 bg-violet-400/10 text-violet-200" : "border-white/10 bg-white/[0.03] text-transparent group-hover:border-violet-300/25"}`}>
+                  <div
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs ${
+                      t.done
+                        ? "border-violet-300/30 bg-violet-400/10 text-violet-200"
+                        : "border-white/10 bg-white/[0.03] text-transparent group-hover:border-violet-300/25"
+                    }`}
+                  >
                     {t.done ? "✓" : "•"}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] text-white/30">{t.time || "Anytime"}</p>
-                    <p className={`mt-0.5 truncate text-sm font-medium ${t.done ? "text-white/30 line-through" : "text-white/85"}`}>{t.text}</p>
+                    <p
+                      className={`mt-0.5 truncate text-sm font-medium ${
+                        t.done ? "text-white/30 line-through" : "text-white/85"
+                      }`}
+                    >
+                      {t.text}
+                    </p>
                   </div>
                   <span className="text-white/15 transition group-hover:text-violet-300/60">→</span>
                 </div>
