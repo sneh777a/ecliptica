@@ -134,7 +134,7 @@ export default function Dashboard() {
     const y = viewDate.getFullYear();
     const m = viewDate.getMonth();
     const first = new Date(y, m, 1);
-    const startPad = first.getDay(); // Sun-first like mockup
+    const startPad = first.getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
     const cells = [];
     for (let i = 0; i < startPad; i++) cells.push(null);
@@ -178,11 +178,9 @@ export default function Dashboard() {
 
   return (
     <div className="relative pb-8">
-      {/* ambient */}
       <div className="pointer-events-none absolute -right-10 top-0 h-64 w-64 rounded-full bg-violet-600/20 blur-[100px]" />
       <div className="pointer-events-none absolute left-1/3 top-40 h-40 w-40 rounded-full bg-fuchsia-500/10 blur-[80px]" />
 
-      {/* Greeting */}
       <header className="relative mb-8">
         <p className="mb-1 flex items-center gap-2 text-sm text-violet-300/80">
           <span>✦</span> {greet},
@@ -201,13 +199,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/*
-        Grid like mockup:
-        [ Today's Schedule ] [ Tomorrow's Schedule ] [ Calendar ]
-                                                   [ Deadlines ]
+      {/* Exact layout:
+          [ Today's Schedule ] [ Tomorrow's Schedule ] [ Calendar     ]
+                                                     [ Deadlines    ]
       */}
-      <div className="relative grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-        {/* Today */}
+      <div className="relative grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-[1fr_1fr_minmax(280px,340px)] xl:items-start">
         <ScheduleCard
           icon="☀"
           title="Today's Schedule"
@@ -222,7 +218,6 @@ export default function Dashboard() {
           emptyText="No plans for today yet"
         />
 
-        {/* Tomorrow */}
         <ScheduleCard
           icon="☾"
           title="Tomorrow's Schedule"
@@ -237,9 +232,8 @@ export default function Dashboard() {
           emptyText="Nothing scheduled for tomorrow"
         />
 
-        {/* Right column: Calendar + Deadlines */}
-        <div className="space-y-5 lg:col-span-2 xl:col-span-1">
-          {/* Calendar */}
+        {/* Right stack: Calendar on top, Deadlines under it */}
+        <div className="flex flex-col gap-5 md:col-span-2 xl:col-span-1">
           <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.15)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
               <button
@@ -296,7 +290,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Upcoming deadlines */}
           <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.12)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
@@ -355,12 +348,12 @@ export default function Dashboard() {
 
 function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
   return (
-    <div className="flex flex-col rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.12)] backdrop-blur-xl">
+    <div className="flex min-h-[420px] flex-col rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.12)] backdrop-blur-xl">
       <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-base font-semibold text-white">
           <span className="text-violet-300">{icon}</span> {title}
         </h2>
-        <span className="text-xs text-white/35">{dateLabel}</span>
+        <span className="shrink-0 text-xs text-white/35">{dateLabel}</span>
       </div>
 
       {tasks.length === 0 ? (
@@ -384,9 +377,7 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
                 />
                 <div className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] text-white/40">
-                      {t.time || "Anytime"}
-                    </p>
+                    <p className="text-[11px] text-white/40">{t.time || "Anytime"}</p>
                     <p
                       className={`mt-0.5 truncate text-sm font-medium ${
                         t.done ? "line-through text-white/35" : "text-white/90"
