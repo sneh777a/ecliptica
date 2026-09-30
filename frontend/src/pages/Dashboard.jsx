@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
-
-const API_URL = "https://ecliptica-api.onrender.com";
+import { createApi, formatApiError } from "../api";
 
 const ACCENTS = [
   "from-fuchsia-500 to-pink-500",
@@ -42,14 +40,7 @@ export default function Dashboard() {
   const [viewDate, setViewDate] = useState(() => new Date());
 
   const token = localStorage.getItem("token");
-  const api = useMemo(
-    () =>
-      axios.create({
-        baseURL: API_URL,
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    [token]
-  );
+  const api = useMemo(() => createApi(token), [token]);
 
   useEffect(() => {
     if (!token) {
@@ -61,18 +52,13 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError("");
-        const [g, t] = await Promise.all([
-          api.get("/goals/"),
-          api.get("/goals/tasks"),
-        ]);
+        const [g, t] = await Promise.all([api.get("/goals/"), api.get("/goals/tasks")]);
         if (!cancelled) {
           setGoals(g.data || []);
           setTasks(t.data || []);
         }
       } catch (err) {
-        if (!cancelled) {
-          setError(err.response?.data?.detail || "Could not load dashboard");
-        }
+        if (!cancelled) setError(formatApiError(err, "Could not load dashboard"));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -102,6 +88,7 @@ export default function Dashboard() {
     goals.forEach((g) => {
       if (!g.deadline) return;
       const d = startOfDay(new Date(g.deadline));
+      if (Number.isNaN(d.getTime())) return;
       if (d >= today && d <= limit) {
         items.push({
           id: `goal-${g.id}`,
@@ -113,6 +100,7 @@ export default function Dashboard() {
     tasks.forEach((t) => {
       if (!t.date || t.done) return;
       const d = startOfDay(new Date(t.date));
+      if (Number.isNaN(d.getTime())) return;
       if (d >= today && d <= limit) {
         items.push({
           id: `task-${t.id}`,
@@ -155,8 +143,8 @@ export default function Dashboard() {
       await api.patch(`/goals/tasks/${id}/toggle`);
       const t = await api.get("/goals/tasks");
       setTasks(t.data || []);
-    } catch {
-      setError("Could not update task");
+    } catch (err) {
+      setError(formatApiError(err, "Could not update task"));
     }
   };
 
@@ -183,24 +171,16 @@ export default function Dashboard() {
         <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
           Ready to make today count?
         </h1>
-        <p className="mt-2 text-sm text-white/40">
-          Your dreams don't work unless you do.
-        </p>
+        <p className="mt-2 text-sm text-white/40">Your dreams don't work unless you do.</p>
       </header>
 
       {error && (
         <div className="relative mb-6 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200/90">
-          {String(error)}
+          {error}
         </div>
       )}
 
-      {/*
-        LEFT   → Health + Finance
-        CENTER → Today + Tomorrow (checklist)
-        RIGHT  → Calendar + Deadlines
-      */}
       <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[0.85fr_1.3fr_0.95fr]">
-        {/* LEFT: Health + Finance */}
         <div className="flex flex-col gap-5">
           <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 backdrop-blur-xl">
             <div className="mb-5 flex items-center justify-between">
@@ -211,7 +191,6 @@ export default function Dashboard() {
                 Open →
               </Link>
             </div>
-
             <div className="mb-5">
               <div className="mb-2 flex items-center justify-between text-xs">
                 <span className="text-white/45">💧 Water Intake</span>
@@ -230,7 +209,6 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
                 <p className="text-[11px] text-white/40">👟 Steps</p>
@@ -258,7 +236,6 @@ export default function Dashboard() {
                 Open →
               </Link>
             </div>
-
             <div className="mb-4">
               <div className="mb-2 flex items-center justify-between text-xs">
                 <span className="text-white/45">Monthly Budget</span>
@@ -268,7 +245,6 @@ export default function Dashboard() {
                 <div className="h-full w-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400" />
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-3">
                 <p className="text-[11px] text-white/40">Total Spending</p>
@@ -279,14 +255,12 @@ export default function Dashboard() {
                 <p className="mt-1 text-lg font-semibold text-emerald-300/90">—</p>
               </div>
             </div>
-
             <p className="mt-4 text-center text-[11px] text-white/25">
               Connect numbers on the Finance page
             </p>
           </div>
         </div>
 
-        {/* CENTER: Today + Tomorrow checklist — main focus */}
         <div className="flex flex-col gap-5">
           <ScheduleCard
             icon="☀"
@@ -316,7 +290,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* RIGHT: Calendar + Deadlines (< 10 days) */}
         <div className="flex flex-col gap-5">
           <div className="rounded-3xl border border-white/10 bg-[#12122a]/80 p-5 shadow-[0_0_40px_rgba(88,28,135,0.15)] backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between">
