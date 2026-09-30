@@ -153,6 +153,13 @@ export default function Dashboard() {
 
   if (loading) {
     return (
+      <div className="flex min-h-[50vh] items-center justify-center text-sm text-white/40">
+        Loading your orbit…
+      </div>
+    );
+  }
+
+  return (
     <div className="relative min-h-full overflow-hidden pb-10">
       <div className="pointer-events-none absolute -left-24 top-20 h-72 w-72 rounded-full bg-violet-600/15 blur-[110px]" />
       <div className="pointer-events-none absolute right-10 top-0 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-[120px]" />
@@ -343,7 +350,8 @@ export default function Dashboard() {
     </div>
   );
 }
-
+  );
+}
 function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
   return (
     <section className="relative flex min-h-[285px] flex-1 flex-col overflow-hidden rounded-[30px] border border-white/[0.1] bg-white/[0.055] p-5 shadow-[0_20px_70px_rgba(0,0,0,0.2)] backdrop-blur-2xl sm:p-6">
