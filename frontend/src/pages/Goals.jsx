@@ -408,7 +408,7 @@ export default function Goals() {
         <div className="relative overflow-x-auto pb-2">
           <div className="min-w-[820px]">
             <div className="relative ml-20 h-8">
-              <div className="absolute inset-x-0 bottom-0 grid grid-cols-13">
+              <div className="absolute inset-x-0 bottom-0 grid grid-cols-[repeat(13,minmax(0,1fr))]">
                 {timelineHours.map((h) => (
                   <div key={h} className="text-center text-[10px] text-white/30">
                     {h > 12 ? h - 12 : h}:00
@@ -418,7 +418,7 @@ export default function Goals() {
             </div>
 
             <div className="relative min-h-[260px] rounded-2xl border border-white/[0.06] bg-[#0b0d1d]/70">
-              <div className="absolute inset-0 ml-20 grid grid-cols-13">
+              <div className="absolute inset-0 ml-20 grid grid-cols-[repeat(13,minmax(0,1fr))]">
                 {timelineHours.map((h) => (
                   <div key={h} className="border-r border-white/[0.055] last:border-r-0" />
                 ))}
@@ -486,6 +486,4 @@ export default function Goals() {
         </div>
       </section>
     </div>
-  );
-
-}
+  );\n}\n
