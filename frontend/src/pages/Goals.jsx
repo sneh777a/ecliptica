@@ -325,13 +325,6 @@ export default function Goals() {
         <aside className="flex flex-col gap-6">
           {goalCard("Yearly Goals", "Long horizon", yearlyGoals, "bg-violet-500/15")}
           {goalCard("Monthly Goals", "This month", monthlyGoals, "bg-fuchsia-500/12")}
-          <div className="rounded-[28px] border border-violet-200/[0.12] bg-white/[0.045] p-5 backdrop-blur-2xl">
-            <p className="text-[10px] tracking-[0.18em] text-violet-300/50 uppercase">Today</p>
-            <p className="mt-2 text-2xl font-semibold text-white">{dayPct}%</p>
-            <p className="mt-1 text-xs text-white/35">
-              {doneToday}/{todayTasks.length || 0} tasks done
-            </p>
-          </div>
         </aside>
 
         <div className="hidden min-h-[380px] xl:block" aria-hidden="true" />
