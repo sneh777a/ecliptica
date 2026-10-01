@@ -233,7 +233,7 @@ export default function Goals() {
       : null;
 
   const goalCard = (title, subtitle, items, accent) => (
-    <section className="relative overflow-hidden rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-5 shadow-[0_0_32px_rgba(139,92,246,0.10)] backdrop-blur-2xl">
+    <section className="relative min-h-[190px] overflow-hidden rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-6 shadow-[0_0_32px_rgba(139,92,246,0.10)] backdrop-blur-2xl">
       <div className={`pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full blur-3xl ${accent}`} />
       <div className="relative mb-4 flex items-start justify-between gap-3">
         <div>
@@ -284,13 +284,13 @@ export default function Goals() {
       <div className="pointer-events-none absolute -left-24 top-10 h-72 w-72 rounded-full bg-violet-600/15 blur-[110px]" />
       <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-fuchsia-500/10 blur-[120px]" />
 
-      <header className="relative mb-7 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <header className="relative mb-8 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <p className="mb-2 text-xs font-medium tracking-[0.22em] text-violet-300/65 uppercase">✦ Goal orbit</p>
           <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Your goals</h1>
           <p className="mt-2 text-sm text-white/40">Big picture above. Today in motion below.</p>
         </div>
-        <form onSubmit={createGoal} className="flex flex-wrap gap-2">
+        <form onSubmit={createGoal} className="flex w-full flex-wrap gap-2 xl:w-auto xl:justify-end">
           <input
             value={newGoalTitle}
             onChange={(e) => setNewGoalTitle(e.target.value)}
@@ -321,8 +321,8 @@ export default function Goals() {
         </div>
       ) : null}
 
-      <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[0.85fr_1.35fr_0.95fr]">
-        <aside className="flex flex-col gap-5">
+      <div className="relative grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.55fr_0.95fr]">
+        <aside className="flex flex-col gap-6">
           {goalCard("Yearly Goals", "Long horizon", yearlyGoals, "bg-violet-500/15")}
           {goalCard("Monthly Goals", "This month", monthlyGoals, "bg-fuchsia-500/12")}
           <div className="rounded-[28px] border border-violet-200/[0.12] bg-white/[0.045] p-5 backdrop-blur-2xl">
@@ -334,7 +334,7 @@ export default function Goals() {
           </div>
         </aside>
 
-        <div className="hidden min-h-[200px] xl:block" aria-hidden="true" />
+        <div className="hidden min-h-[380px] xl:block" aria-hidden="true" />
 
         <aside className="flex flex-col gap-5">
           <div className="relative overflow-hidden rounded-[28px] border border-violet-200/[0.12] bg-white/[0.045] p-5 backdrop-blur-2xl">
@@ -432,7 +432,7 @@ export default function Goals() {
         </aside>
       </div>
 
-      <section className="relative mt-5 overflow-hidden rounded-[30px] border border-violet-200/[0.14] bg-white/[0.05] p-5 backdrop-blur-2xl sm:p-6">
+      <section className="relative mt-6 overflow-hidden rounded-[30px] border border-violet-200/[0.14] bg-white/[0.05] p-5 backdrop-blur-2xl sm:p-6">
         <div className="relative mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] font-medium tracking-[0.2em] text-violet-300/60 uppercase">Daily timeline</p>
@@ -457,7 +457,7 @@ export default function Goals() {
           </form>
         </div>
 
-        <div className="relative min-h-[220px] overflow-x-auto rounded-2xl border border-white/[0.06] bg-[#0d1022]/50 p-4">
+        <div className="relative min-h-[250px] overflow-x-auto rounded-2xl border border-white/[0.06] bg-[#0d1022]/50 p-4">
           <div className="relative min-w-[640px]">
             <div className="mb-8 flex" style={{ paddingLeft: 80 }}>
               {timelineHours.map((h) => (
