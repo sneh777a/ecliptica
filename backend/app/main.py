@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.routers import auth, goals
+from app.routers import auth, goals, assistant
 from app.database import engine, Base
 from app.models.user import User
 from app.models.goal import Goal, Task
@@ -53,6 +53,7 @@ async def startup():
 
 app.include_router(auth.router)
 app.include_router(goals.router)
+app.include_router(assistant.router)
 
 
 @app.get("/")
