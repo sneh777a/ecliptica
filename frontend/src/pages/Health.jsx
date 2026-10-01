@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const BLUE_CARD =
   "border border-cyan-300/10 bg-gradient-to-br from-[#0b1830]/95 via-[#0a1429]/90 to-[#08101f]/95 shadow-[0_0_30px_rgba(56,189,248,0.08)] backdrop-blur-2xl";
@@ -41,6 +41,7 @@ export default function Health() {
   const [newReminderAmount, setNewReminderAmount] = useState(250);
   const [notificationStatus, setNotificationStatus] = useState("");
   const [now, setNow] = useState(new Date());
+  const notifiedReminderRef = useRef("");
 
   const completedCount = habits.filter((h) => h.done).length;
   const totalCount = habits.length;
@@ -91,6 +92,10 @@ export default function Health() {
       );
 
       if (!reminder || current.getSeconds() > 5) return;
+
+      const reminderKey = `${current.toDateString()}-${reminder.time}`;
+      if (notifiedReminderRef.current === reminderKey) return;
+      notifiedReminderRef.current = reminderKey;
 
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("Ecliptica · Time to drink water", {
