@@ -199,7 +199,7 @@ export default function Dashboard() {
         <span className="absolute left-[6%] bottom-[18%] h-1 w-1 rounded-full bg-cyan-200/60 shadow-[0_0_12px_rgba(103,232,249,0.7)]" />
       </div>
 
-      <header className="relative mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <header className="relative mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="mb-2 text-xs font-medium tracking-[0.22em] text-violet-300/65 uppercase">
             ✦ Your personal orbit
@@ -229,9 +229,9 @@ export default function Dashboard() {
         </div>
       ) : null}
 
-      <div className="relative grid grid-cols-1 gap-5 xl:grid-cols-[0.82fr_1.45fr_0.93fr]">
-        <aside className="flex flex-col gap-5">
-          <div className="relative overflow-hidden rounded-[28px] border border-violet-300/[0.12] bg-white/[0.045] p-5 shadow-[0_0_35px_rgba(139,92,246,0.08),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
+      <div className="relative grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.55fr_0.95fr]">
+        <aside className="flex flex-col gap-6">
+          <div className="relative min-h-[300px] overflow-hidden rounded-[28px] border border-violet-300/[0.12] bg-white/[0.045] p-6 shadow-[0_0_35px_rgba(139,92,246,0.08),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl">
             <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-violet-500/15 blur-3xl" />
             <div className="pointer-events-none absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-fuchsia-500/10 blur-3xl" />
             <div className="mb-5 flex items-center justify-between">
@@ -276,7 +276,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-5 shadow-[0_0_32px_rgba(139,92,246,0.11),inset_0_1px_0_rgba(255,255,255,0.04),0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+          <div className="min-h-[300px] rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-6 shadow-[0_0_32px_rgba(139,92,246,0.11),inset_0_1px_0_rgba(255,255,255,0.04),0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-medium tracking-[0.18em] text-amber-300/60 uppercase">
@@ -313,7 +313,7 @@ export default function Dashboard() {
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-6">
           <ScheduleCard
             icon="☀"
             title="Today"
@@ -340,8 +340,8 @@ export default function Dashboard() {
           />
         </div>
 
-        <aside className="flex min-w-0 flex-col gap-5">
-          <div className="rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-5 shadow-[0_0_32px_rgba(139,92,246,0.11),inset_0_1px_0_rgba(255,255,255,0.04),0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
+        <aside className="flex min-w-0 flex-col gap-6">
+          <div className="min-h-[330px] rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-6 shadow-[0_0_32px_rgba(139,92,246,0.11),inset_0_1px_0_rgba(255,255,255,0.04),0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-2xl">
             <div className="mb-5 flex items-center justify-between">
               <button
                 type="button"
@@ -454,7 +454,7 @@ function ScheduleCard({ icon, title, dateLabel, tasks, onToggle, emptyText }) {
   const list = asArray(tasks);
 
   return (
-    <section className="relative flex min-h-[285px] flex-1 flex-col overflow-hidden rounded-[30px] border border-violet-200/[0.14] bg-gradient-to-br from-white/[0.075] via-white/[0.05] to-violet-500/[0.03] p-5 shadow-[0_0_42px_rgba(139,92,246,0.13),inset_0_1px_0_rgba(255,255,255,0.05),0_20px_70px_rgba(0,0,0,0.24)] backdrop-blur-2xl sm:p-6">
+    <section className="relative flex min-h-[315px] flex-1 flex-col overflow-hidden rounded-[30px] border border-violet-200/[0.14] bg-gradient-to-br from-white/[0.075] via-white/[0.05] to-violet-500/[0.03] p-5 shadow-[0_0_42px_rgba(139,92,246,0.13),inset_0_1px_0_rgba(255,255,255,0.05),0_20px_70px_rgba(0,0,0,0.24)] backdrop-blur-2xl sm:p-6">
       <div className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-violet-500/10 blur-3xl" />
       <div className="relative mb-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
