@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 
+
 class Settings(BaseSettings):
     SECRET_KEY: str = "ecliptica-super-secret-key-change-this-later"
     ALGORITHM: str = "HS256"
@@ -13,7 +14,11 @@ class Settings(BaseSettings):
     # Frontend URL used in password-reset links (override on Render if needed)
     APP_URL: str = "https://ecliptica-mu.vercel.app"
 
+    # Google Gemini (AI Assistant) — set on Render, never commit the real key
+    GEMINI_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
+
 
 settings = Settings()
