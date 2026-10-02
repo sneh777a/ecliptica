@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import date as date_cls, datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,37 +18,57 @@ from app.utils.deps import get_current_user
 
 router = APIRouter(prefix="/assistant", tags=["Assistant"])
 
-SYSTEM_PROMPT = """You are Ecliptica AI — the user's personal operating system coach inside the Ecliptica app.
+SYSTEM_PROMPT = """You are Ecliptica AI — a warm, practical personal coach inside the user's life app.
 
-You ALWAYS receive a live snapshot of their data (goals, steps, today's tasks). Use it.
-- Refer to their real goals by name when relevant.
-- Do not invent goals they already have; improve or extend them.
-- Be concrete: time estimates, day-by-day plans, next actions.
-- End with ONE clear next-step question when helpful.
-- Do not force multiple-choice options unless they ask.
-- Tone: calm, focused, premium personal OS — not hype.
+LANGUAGE
+- Understand natural, messy, informal English (and mixed styles). Typos, short messages, and casual talk are fine.
+- Examples you should understand without special commands:
+  · "exam next week toc help"
+  · "i keep forgetting water can u track that somehow"
+  · "put this in my goals"
+  · "yeah save it"
+  · "make me a plan and add it"
+  · "i need to finish react this month"
+- Infer intent from context + chat history. Do not require rigid phrases like "create_goal" or "add step".
+- Reply in clear, friendly language. Avoid sounding like a form or a robot.
 
-When the user wants you to CREATE or UPDATE data in the app, you MUST also output an actions block
-AFTER your normal reply. The app will execute it.
+APP DATA
+- You always get a live snapshot of their goals, steps, and tasks. Use real names and progress.
+- Don't invent goals they already have; build on them.
+- Health & Finance may be empty on the server — say so honestly if asked.
 
-Format (exact):
+WHEN TO SAVE THINGS INTO THE APP
+Save (emit ACTIONS) when their intent is to keep something in Ecliptica, even if worded casually, e.g.:
+- "add / save / track / put this in goals / set this up / remember this / plan it for me in the app"
+- "I want a goal for…" / "help me organize TOC in the app"
+- After you propose a plan, if they say "yes", "ok do it", "save", "go ahead", "add those steps"
+
+Do NOT save when they only want ideas or explanation ("how should I study?", "what is NFA?").
+If unsure whether to save, ask one short question — unless they already said yes to a plan you offered.
+
+HOW TO SAVE (hidden from the user — app executes this)
+After your normal human reply, append exactly:
 
 <<<ACTIONS
-[
-  {"action": "create_goal", "title": "Complete TOC course", "type": "year", "deadline": "2026-12-31"},
-  {"action": "add_step", "goal_title": "Complete TOC course", "text": "Finish automata unit"},
-  {"action": "add_step", "goal_title": "Complete TOC course", "text": "Practice past 3 years papers"},
-  {"action": "create_task", "text": "Study TOC 2 hours", "date": "2026-10-02", "time": "09:00"}
-]
+[ ...json array... ]
 ACTIONS>>>
 
-Rules for actions:
-- type for create_goal: year | monthly | weekly
-- Only include the ACTIONS block when the user clearly wants something saved (e.g. "add this goal", "create the plan in my app", "save these steps").
-- If they only ask for advice, do NOT output ACTIONS.
-- goal_title in add_step must match an existing goal title OR a create_goal title in the same list.
-- Keep titles short and clear.
-- date format YYYY-MM-DD when used.
+Allowed actions:
+1) create_goal — {"action":"create_goal","title":"...","type":"year|monthly|weekly","deadline":"YYYY-MM-DD or empty","description":"optional"}
+2) add_step — {"action":"add_step","goal_title":"exact or close goal title","text":"step text"}
+3) create_task — {"action":"create_task","text":"...","date":"YYYY-MM-DD","time":"optional HH:MM or 9am"}
+
+Guidelines:
+- Pick type from time horizon: year ≈ long course/career; monthly ≈ this month exam/sprint; weekly ≈ this week focus.
+- Prefer a few solid steps (3–7) over a huge list unless they ask for detail.
+- goal_title for add_step should match a goal you just created or one in their live data.
+- Never put the ACTIONS block in the middle of the reply; always at the end.
+- The user should not need to know this format exists.
+
+REPLY STYLE
+- Concrete plans, short headings, bullets when useful.
+- One clear next question when it helps.
+- No forced A/B/C choices unless they ask for options.
 """
 
 
@@ -93,20 +114,21 @@ async def _user_context(db: AsyncSession, user: User) -> str:
     )
     tasks = tasks_result.scalars().all()
 
+    today = date_cls.today().isoformat()
     lines: List[str] = [
+        f"Today's date: {today}",
         f"User name: {user.name}",
-        f"User email: {user.email}",
         "",
-        "=== GOALS ===",
+        "=== GOALS (live) ===",
     ]
 
     if not goals:
-        lines.append("(no goals yet)")
+        lines.append("(no goals yet — you can create some when they want that)")
     else:
         for g in goals:
             lines.append(
-                f"- [{g.type}] {g.title} | progress {g.progress}% "
-                f"({g.completed_count}/{g.target_count}) deadline={g.deadline or 'none'}"
+                f"- [{g.type}] «{g.title}» | progress {g.progress}% "
+                f"({g.completed_count}/{g.target_count} steps) deadline={g.deadline or 'none'}"
             )
             steps = [t for t in (g.tasks or []) if t.type == "step" or t.goal_id == g.id]
             if steps:
@@ -117,26 +139,23 @@ async def _user_context(db: AsyncSession, user: User) -> str:
                 lines.append("    (no steps yet)")
 
     lines.append("")
-    lines.append("=== RECENT TASKS (not only steps) ===")
+    lines.append("=== TASKS (live, non-step) ===")
     plain = [t for t in tasks if t.type != "step"]
     if not plain:
-        lines.append("(no standalone tasks)")
+        lines.append("(none)")
     else:
         for t in plain[:25]:
             mark = "done" if t.done else "todo"
             lines.append(
-                f"- [{mark}] {t.text} | type={t.type} date={t.date or '-'} time={t.time or '-'}"
+                f"- [{mark}] {t.text} | date={t.date or '-'} time={t.time or '-'}"
             )
 
     lines.append("")
-    lines.append("=== OTHER MODULES ===")
-    lines.append("Health & Finance: UI only for now (no server data yet).")
-
+    lines.append("Health & Finance: no server data yet (UI only).")
     return "\n".join(lines)
 
 
 def _split_actions(raw: str) -> tuple[str, List[Dict[str, Any]]]:
-    """Extract <<<ACTIONS ... ACTIONS>>> JSON; return (visible_reply, actions)."""
     if not raw:
         return "", []
 
@@ -150,7 +169,6 @@ def _split_actions(raw: str) -> tuple[str, List[Dict[str, Any]]]:
 
     reply = (raw[: match.start()] + raw[match.end() :]).strip()
     blob = match.group(1).strip()
-    # Allow accidental markdown fences
     blob = re.sub(r"^```(?:json)?\s*", "", blob)
     blob = re.sub(r"\s*```$", "", blob)
 
@@ -165,16 +183,38 @@ def _split_actions(raw: str) -> tuple[str, List[Dict[str, Any]]]:
         return reply or raw.strip(), []
 
 
+def _resolve_goal_id(title_to_id: Dict[str, int], goal_title: str) -> Optional[int]:
+    """Exact match, then substring / contains match for natural titles."""
+    if not goal_title:
+        return None
+    key = goal_title.strip().lower()
+    if key in title_to_id:
+        return title_to_id[key]
+    # partial: user/model said shorter or longer name
+    for stored, gid in title_to_id.items():
+        if key in stored or stored in key:
+            return gid
+    return None
+
+
+def _parse_date(value: Optional[str]) -> Optional[date_cls]:
+    if not value:
+        return None
+    value = str(value).strip()
+    try:
+        return date_cls.fromisoformat(value[:10])
+    except ValueError:
+        return None
+
+
 async def _apply_actions(
     db: AsyncSession,
     user: User,
     actions: List[Dict[str, Any]],
 ) -> List[str]:
     applied: List[str] = []
-    # Map title -> goal id for steps created in same batch
     title_to_id: Dict[str, int] = {}
 
-    # Preload existing goals by title (case-insensitive)
     existing = await db.execute(select(Goal).where(Goal.user_id == user.id))
     for g in existing.scalars().all():
         title_to_id[g.title.strip().lower()] = g.id
@@ -188,13 +228,20 @@ async def _apply_actions(
                 continue
             gtype = str(act.get("type") or "monthly").strip().lower()
             if gtype not in ("year", "monthly", "weekly"):
-                gtype = "monthly"
+                # natural synonyms
+                if gtype in ("yearly", "annual", "long", "long-term"):
+                    gtype = "year"
+                elif gtype in ("month", "this month"):
+                    gtype = "monthly"
+                elif gtype in ("week", "this week"):
+                    gtype = "weekly"
+                else:
+                    gtype = "monthly"
             deadline = str(act.get("deadline") or "").strip()
 
-            # Avoid exact duplicate titles
             key = title.lower()
             if key in title_to_id:
-                applied.append(f"Goal already exists: {title}")
+                applied.append(f"Already had goal: {title}")
                 continue
 
             goal = Goal(
@@ -226,20 +273,19 @@ async def _apply_actions(
                     resolved_id = int(goal_id)
                 except (TypeError, ValueError):
                     resolved_id = None
-            if resolved_id is None and goal_title:
-                resolved_id = title_to_id.get(goal_title.lower())
+            if resolved_id is None:
+                resolved_id = _resolve_goal_id(title_to_id, goal_title)
 
             if resolved_id is None:
-                applied.append(f"Could not attach step (goal not found): {text}")
+                applied.append(f"Could not find goal for step: {text}")
                 continue
 
-            # Verify ownership
             gres = await db.execute(
                 select(Goal).where(Goal.id == resolved_id, Goal.user_id == user.id)
             )
             goal = gres.scalars().first()
             if not goal:
-                applied.append(f"Could not attach step (goal missing): {text}")
+                applied.append(f"Could not find goal for step: {text}")
                 continue
 
             step = Task(
@@ -254,7 +300,6 @@ async def _apply_actions(
             db.add(step)
             await db.commit()
 
-            # Recalc progress
             g2 = await db.execute(
                 select(Goal)
                 .where(Goal.id == goal.id)
@@ -270,22 +315,14 @@ async def _apply_actions(
                 goal.progress = round((completed / total) * 100, 1) if total else 0.0
                 await db.commit()
 
-            applied.append(f"Added step to «{goal.title}»: {text}")
+            applied.append(f"Added step on «{goal.title}»: {text}")
 
         elif kind == "create_task":
             text = str(act.get("text") or "").strip()
             if not text:
                 continue
-            date_str = str(act.get("date") or "").strip() or None
+            parsed_date = _parse_date(act.get("date"))
             time_str = str(act.get("time") or "").strip()
-            parsed_date = None
-            if date_str:
-                try:
-                    from datetime import date as date_cls
-
-                    parsed_date = date_cls.fromisoformat(date_str)
-                except ValueError:
-                    parsed_date = None
 
             task = Task(
                 user_id=user.id,
@@ -298,7 +335,7 @@ async def _apply_actions(
             )
             db.add(task)
             await db.commit()
-            applied.append(f"Created task: {text}")
+            applied.append(f"Added task: {text}")
 
     return applied
 
@@ -325,14 +362,16 @@ async def chat(
         if role == "user":
             history.append({"role": "user", "parts": [text]})
         elif role == "assistant":
-            history.append({"role": "model", "parts": [text]})
+            # Don't feed previous action receipts back as model text noise
+            cleaned = re.sub(r"\n—\n[\s\S]*$", "", text).strip()
+            if cleaned:
+                history.append({"role": "model", "parts": [cleaned]})
     history = history[-12:]
 
-    # Inject live app data with the user message
     augmented = (
-        "[ECLIPTICA LIVE DATA — trust this over assumptions]\n"
+        "[LIVE APP DATA — prefer this over guesses]\n"
         f"{context}\n\n"
-        f"[USER MESSAGE]\n{message}"
+        f"[USER SAID — interpret naturally]\n{message}"
     )
 
     try:
@@ -351,7 +390,11 @@ async def chat(
             applied = await _apply_actions(db, current_user, actions)
 
         if not reply:
-            reply = "Done." if applied else "I could not generate a reply. Please try again."
+            reply = (
+                "Got it — I updated your app."
+                if applied
+                else "I could not generate a reply. Please try again."
+            )
 
         if applied:
             reply = reply + "\n\n—\n" + "\n".join(f"✓ {a}" for a in applied)
