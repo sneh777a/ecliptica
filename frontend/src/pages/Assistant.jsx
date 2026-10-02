@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { createApi, formatApiError } from "../api";
 
 const QUICK = [
-  "What should I do today?",
-  "Plan my day",
-  "Break down a goal",
+  "What should I do today based on my goals?",
+  "Create a yearly TOC goal with steps",
+  "Break down my monthly goals into steps",
   "I missed tasks — help me catch up",
 ];
 
@@ -12,7 +12,8 @@ export default function Assistant() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "Hi — I'm Ecliptica AI. Tell me what you want to achieve (exam, project, habit). I'll estimate time and build a day-by-day plan.",
+      text:
+        "Hi — I'm Ecliptica AI. I can see your goals, steps, and tasks. Ask me to plan, or say things like “add a yearly goal for TOC with 5 steps” and I'll save them in Goals.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -41,7 +42,6 @@ export default function Assistant() {
 
     try {
       const api = createApi(token);
-      // Send recent history only (skip the welcome if it's the only assistant msg)
       const history = messages
         .filter((m) => m.text)
         .slice(-10)
@@ -52,9 +52,16 @@ export default function Assistant() {
         history,
       });
 
-      const reply =
+      let reply =
         res.data?.reply ||
         "I could not generate a reply. Please try again.";
+
+      const applied = res.data?.actions_applied;
+      if (Array.isArray(applied) && applied.length > 0 && !reply.includes("✓")) {
+        reply +=
+          "\n\n—\n" +
+          applied.map((a) => `✓ ${a}`).join("\n");
+      }
 
       setMessages((m) => [...m, { role: "assistant", text: reply }]);
     } catch (err) {
@@ -82,7 +89,7 @@ export default function Assistant() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Assistant</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Plan goals, exams, and your day — powered by Gemini
+          Reads your Goals & tasks · can create goals and steps for you
         </p>
       </div>
 
@@ -133,7 +140,7 @@ export default function Assistant() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="e.g. TOC exam in 4 days — I have syllabus + 3 years papers"
+          placeholder='e.g. "Add yearly goal Complete TOC with 5 study steps"'
           disabled={loading}
           className="flex-1 rounded-xl border border-gray-700 bg-[#0b0b0f] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none disabled:opacity-60"
         />
