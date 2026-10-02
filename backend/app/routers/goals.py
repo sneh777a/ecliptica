@@ -59,7 +59,6 @@ async def create_goal(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Start with 0 steps; progress grows as user adds steps
     new_goal = Goal(
         user_id=current_user.id,
         title=goal.title,
@@ -80,74 +79,7 @@ async def create_goal(
     return result.scalars().first()
 
 
-@router.get("/{goal_id}", response_model=GoalResponse)
-async def get_goal(
-    goal_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    result = await db.execute(
-        select(Goal)
-        .where(Goal.id == goal_id, Goal.user_id == current_user.id)
-        .options(selectinload(Goal.tasks))
-    )
-    goal = result.scalars().first()
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-    return goal
-
-
-@router.post("/{goal_id}/steps", response_model=TaskResponse)
-async def add_step(
-    goal_id: int,
-    body: StepCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    """Add a step on the path to a yearly / monthly / weekly goal."""
-    result = await db.execute(
-        select(Goal).where(Goal.id == goal_id, Goal.user_id == current_user.id)
-    )
-    goal = result.scalars().first()
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-
-    text = body.text.strip()
-    if not text:
-        raise HTTPException(status_code=400, detail="Step text is required")
-
-    step = Task(
-        user_id=current_user.id,
-        goal_id=goal.id,
-        text=text,
-        time="",
-        date=None,
-        type="step",
-        done=False,
-    )
-    db.add(step)
-    await db.commit()
-    await db.refresh(step)
-    await _recalc_goal_progress(db, goal.id)
-    return step
-
-
-@router.delete("/{goal_id}")
-async def delete_goal(
-    goal_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    result = await db.execute(
-        select(Goal).where(Goal.id == goal_id, Goal.user_id == current_user.id)
-    )
-    goal = result.scalars().first()
-    if not goal:
-        raise HTTPException(status_code=404, detail="Goal not found")
-    await db.delete(goal)
-    await db.commit()
-    return {"message": "Goal deleted"}
-
+# --- tasks routes BEFORE /{goal_id} so "tasks" is not parsed as an id ---
 
 @router.post("/tasks", response_model=TaskResponse)
 async def create_task(
@@ -241,3 +173,74 @@ async def rollover_missed_tasks(
 
     await db.commit()
     return {"message": f"Moved {len(missed)} missed tasks to today"}
+
+
+# --- goal by id + steps ---
+
+@router.get("/{goal_id}", response_model=GoalResponse)
+async def get_goal(
+    goal_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Goal)
+        .where(Goal.id == goal_id, Goal.user_id == current_user.id)
+        .options(selectinload(Goal.tasks))
+    )
+    goal = result.scalars().first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return goal
+
+
+@router.post("/{goal_id}/steps", response_model=TaskResponse)
+async def add_step(
+    goal_id: int,
+    body: StepCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Add a step on the path to a yearly / monthly / weekly goal."""
+    result = await db.execute(
+        select(Goal).where(Goal.id == goal_id, Goal.user_id == current_user.id)
+    )
+    goal = result.scalars().first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+
+    text = body.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Step text is required")
+
+    step = Task(
+        user_id=current_user.id,
+        goal_id=goal.id,
+        text=text,
+        time="",
+        date=None,
+        type="step",
+        done=False,
+    )
+    db.add(step)
+    await db.commit()
+    await db.refresh(step)
+    await _recalc_goal_progress(db, goal.id)
+    return step
+
+
+@router.delete("/{goal_id}")
+async def delete_goal(
+    goal_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = await db.execute(
+        select(Goal).where(Goal.id == goal_id, Goal.user_id == current_user.id)
+    )
+    goal = result.scalars().first()
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    await db.delete(goal)
+    await db.commit()
+    return {"message": "Goal deleted"}
