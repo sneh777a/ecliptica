@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import date as date_cls, datetime
+from datetime import date as date_cls
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -21,54 +21,41 @@ router = APIRouter(prefix="/assistant", tags=["Assistant"])
 SYSTEM_PROMPT = """You are Ecliptica AI — a warm, practical personal coach inside the user's life app.
 
 LANGUAGE
-- Understand natural, messy, informal English (and mixed styles). Typos, short messages, and casual talk are fine.
-- Examples you should understand without special commands:
-  · "exam next week toc help"
-  · "i keep forgetting water can u track that somehow"
-  · "put this in my goals"
-  · "yeah save it"
-  · "make me a plan and add it"
-  · "i need to finish react this month"
-- Infer intent from context + chat history. Do not require rigid phrases like "create_goal" or "add step".
-- Reply in clear, friendly language. Avoid sounding like a form or a robot.
+- Understand natural, messy, informal English. Typos and short notes are fine.
+- Infer intent from context + chat history. No rigid command words required.
 
 APP DATA
-- You always get a live snapshot of their goals, steps, and tasks. Use real names and progress.
-- Don't invent goals they already have; build on them.
-- Health & Finance may be empty on the server — say so honestly if asked.
+- You always get a live snapshot of goals, steps, and tasks. Use real names.
+- Don't invent goals they already have; extend them.
 
-WHEN TO SAVE THINGS INTO THE APP
-Save (emit ACTIONS) when their intent is to keep something in Ecliptica, even if worded casually, e.g.:
-- "add / save / track / put this in goals / set this up / remember this / plan it for me in the app"
-- "I want a goal for…" / "help me organize TOC in the app"
-- After you propose a plan, if they say "yes", "ok do it", "save", "go ahead", "add those steps"
+WHEN TO SAVE
+Emit ACTIONS when they want something kept in the app, e.g. "put this in my goals",
+"save that plan", "ok do it", "add those steps", "track this".
+Do NOT save for pure advice questions.
 
-Do NOT save when they only want ideas or explanation ("how should I study?", "what is NFA?").
-If unsure whether to save, ask one short question — unless they already said yes to a plan you offered.
+WHERE TO SAVE (important)
+- If they say goals / goal / milestones / path / steps / "in my goals" → use create_goal + add_step.
+  Daily create_task alone will NOT show under Goals path.
+- If a matching goal already exists (e.g. TOC Exam Prep), only add_step to that goal.
+- If no goal exists, create_goal (usually type monthly for exams) then add_step for each study block.
+- Use create_task only for one-off calendar to-dos when they ask for a schedule on specific days
+  AND also still add_step if they asked to put it in goals.
 
-HOW TO SAVE (hidden from the user — app executes this)
-After your normal human reply, append exactly:
-
+HOW TO SAVE (append at end of reply only)
 <<<ACTIONS
-[ ...json array... ]
+[
+  {"action":"create_goal","title":"TOC Exam Prep","type":"monthly","deadline":"2026-10-09"},
+  {"action":"add_step","goal_title":"TOC Exam Prep","text":"DFA/NFA conversions & minimization"},
+  {"action":"add_step","goal_title":"TOC Exam Prep","text":"Regular Pumping Lemma practice"}
+]
 ACTIONS>>>
 
-Allowed actions:
-1) create_goal — {"action":"create_goal","title":"...","type":"year|monthly|weekly","deadline":"YYYY-MM-DD or empty","description":"optional"}
-2) add_step — {"action":"add_step","goal_title":"exact or close goal title","text":"step text"}
-3) create_task — {"action":"create_task","text":"...","date":"YYYY-MM-DD","time":"optional HH:MM or 9am"}
-
-Guidelines:
-- Pick type from time horizon: year ≈ long course/career; monthly ≈ this month exam/sprint; weekly ≈ this week focus.
-- Prefer a few solid steps (3–7) over a huge list unless they ask for detail.
-- goal_title for add_step should match a goal you just created or one in their live data.
-- Never put the ACTIONS block in the middle of the reply; always at the end.
-- The user should not need to know this format exists.
+Types: year | monthly | weekly
+Keep 3–7 steps unless they ask for more.
+goal_title must match an existing goal or one created in the same list.
 
 REPLY STYLE
-- Concrete plans, short headings, bullets when useful.
-- One clear next question when it helps.
-- No forced A/B/C choices unless they ask for options.
+Friendly, concrete, short bullets. One next question when helpful.
 """
 
 
@@ -123,7 +110,7 @@ async def _user_context(db: AsyncSession, user: User) -> str:
     ]
 
     if not goals:
-        lines.append("(no goals yet — you can create some when they want that)")
+        lines.append("(no goals yet)")
     else:
         for g in goals:
             lines.append(
@@ -184,17 +171,25 @@ def _split_actions(raw: str) -> tuple[str, List[Dict[str, Any]]]:
 
 
 def _resolve_goal_id(title_to_id: Dict[str, int], goal_title: str) -> Optional[int]:
-    """Exact match, then substring / contains match for natural titles."""
     if not goal_title:
         return None
     key = goal_title.strip().lower()
     if key in title_to_id:
         return title_to_id[key]
-    # partial: user/model said shorter or longer name
     for stored, gid in title_to_id.items():
         if key in stored or stored in key:
             return gid
-    return None
+    # token overlap (TOC vs TOC Exam Prep)
+    key_tokens = set(key.replace("-", " ").split())
+    best_id = None
+    best_score = 0
+    for stored, gid in title_to_id.items():
+        tokens = set(stored.replace("-", " ").split())
+        score = len(key_tokens & tokens)
+        if score > best_score and score >= 1:
+            best_score = score
+            best_id = gid
+    return best_id
 
 
 def _parse_date(value: Optional[str]) -> Optional[date_cls]:
@@ -228,7 +223,6 @@ async def _apply_actions(
                 continue
             gtype = str(act.get("type") or "monthly").strip().lower()
             if gtype not in ("year", "monthly", "weekly"):
-                # natural synonyms
                 if gtype in ("yearly", "annual", "long", "long-term"):
                     gtype = "year"
                 elif gtype in ("month", "this month"):
@@ -362,7 +356,6 @@ async def chat(
         if role == "user":
             history.append({"role": "user", "parts": [text]})
         elif role == "assistant":
-            # Don't feed previous action receipts back as model text noise
             cleaned = re.sub(r"\n—\n[\s\S]*$", "", text).strip()
             if cleaned:
                 history.append({"role": "model", "parts": [cleaned]})
