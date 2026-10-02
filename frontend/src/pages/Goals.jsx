@@ -3,56 +3,30 @@ import axios from "axios";
 
 const API_URL = "https://ecliptica-api.onrender.com";
 
-const ACCENTS = {
-  weekly: { bar: "bg-purple-500", ring: "stroke-purple-500", chip: "bg-purple-500/15 text-purple-300 border-purple-500/30" },
-  monthly: { bar: "bg-cyan-500", ring: "stroke-cyan-500", chip: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30" },
-  year: { bar: "bg-amber-500", ring: "stroke-amber-500", chip: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
+const TYPE_LABEL = {
+  year: "Yearly",
+  monthly: "Monthly",
+  weekly: "Weekly",
 };
 
-function ProgressRing({ value }) {
-  const r = 36;
-  const c = 2 * Math.PI * r;
-  const offset = c - (Math.min(value, 100) / 100) * c;
-  return (
-    <div className="relative w-28 h-28 mx-auto">
-      <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r={r} fill="none" stroke="#1f1f2a" strokeWidth="8" />
-        <circle
-          cx="50"
-          cy="50"
-          r={r}
-          fill="none"
-          stroke="url(#goalGrad)"
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-          className="transition-all duration-700"
-        />
-        <defs>
-          <linearGradient id="goalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#a855f7" />
-            <stop offset="100%" stopColor="#6366f1" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-semibold text-white">{value}%</span>
-        <span className="text-[10px] text-gray-400 uppercase tracking-wide">Daily</span>
-      </div>
-    </div>
-  );
-}
+const TYPE_CHIP = {
+  year: "bg-amber-500/15 text-amber-200/80 border-amber-400/25",
+  monthly: "bg-cyan-500/15 text-cyan-200/80 border-cyan-400/25",
+  weekly: "bg-violet-500/15 text-violet-200/80 border-violet-400/25",
+};
 
 export default function Goals() {
   const [goals, setGoals] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newGoalTitle, setNewGoalTitle] = useState("");
-  const [newGoalType, setNewGoalType] = useState("weekly");
+  const [newGoalType, setNewGoalType] = useState("monthly");
   const [newTaskText, setNewTaskText] = useState("");
   const [error, setError] = useState("");
   const [viewDate, setViewDate] = useState(() => new Date());
+  const [expandedId, setExpandedId] = useState(null);
+  const [stepDraft, setStepDraft] = useState({}); // goalId -> text
+  const [stepBusy, setStepBusy] = useState(null);
 
   const token = localStorage.getItem("token");
   const api = axios.create({
@@ -88,13 +62,14 @@ export default function Goals() {
     e.preventDefault();
     if (!newGoalTitle.trim()) return;
     try {
-      await api.post("/goals/", {
-        title: newGoalTitle,
+      const res = await api.post("/goals/", {
+        title: newGoalTitle.trim(),
         type: newGoalType,
-        target_count: newGoalType === "weekly" ? 7 : newGoalType === "monthly" ? 30 : 12,
+        target_count: 0,
       });
       setNewGoalTitle("");
-      loadData();
+      await loadData();
+      if (res.data?.id) setExpandedId(res.data.id);
     } catch {
       setError("Failed to create goal");
     }
@@ -108,7 +83,7 @@ export default function Goals() {
       const m = String(new Date().getMonth() + 1).padStart(2, "0");
       const d = String(new Date().getDate()).padStart(2, "0");
       await api.post("/goals/tasks", {
-        text: newTaskText,
+        text: newTaskText.trim(),
         type: "daily",
         date: `${y}-${m}-${d}`,
       });
@@ -124,17 +99,33 @@ export default function Goals() {
       await api.patch(`/goals/tasks/${id}/toggle`);
       loadData();
     } catch {
-      setError("Failed to update task");
+      setError("Failed to update");
+    }
+  };
+
+  const addStep = async (goalId) => {
+    const text = (stepDraft[goalId] || "").trim();
+    if (!text) return;
+    try {
+      setStepBusy(goalId);
+      await api.post(`/goals/${goalId}/steps`, { text });
+      setStepDraft((prev) => ({ ...prev, [goalId]: "" }));
+      await loadData();
+    } catch {
+      setError("Failed to add step");
+    } finally {
+      setStepBusy(null);
     }
   };
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
   const todayTasks = tasks.filter(
-    (t) => t.type === "daily" || (t.date && String(t.date).startsWith(todayStr))
+    (t) =>
+      t.type === "daily" ||
+      (t.date && String(t.date).startsWith(todayStr))
   );
-  const doneToday = todayTasks.filter((t) => t.done).length;
-  const dayPct = todayTasks.length ? Math.round((doneToday / todayTasks.length) * 100) : 0;
 
   const calendar = useMemo(() => {
     const y = viewDate.getFullYear();
@@ -145,7 +136,12 @@ export default function Goals() {
     const cells = [];
     for (let i = 0; i < startPad; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
-    return { y, m, cells, label: first.toLocaleString("en", { month: "long", year: "numeric" }) };
+    return {
+      y,
+      m,
+      cells,
+      label: first.toLocaleString("en", { month: "long", year: "numeric" }),
+    };
   }, [viewDate]);
 
   const taskDates = useMemo(() => {
@@ -158,6 +154,9 @@ export default function Goals() {
 
   const yearlyGoals = goals.filter((g) => g.type === "year");
   const monthlyGoals = goals.filter((g) => g.type === "monthly");
+  const weeklyGoals = goals.filter((g) => g.type === "weekly");
+  // Center: long-horizon missions first, then weekly
+  const activeMissions = [...yearlyGoals, ...monthlyGoals, ...weeklyGoals];
 
   const nearDeadlines = useMemo(() => {
     const start = new Date();
@@ -165,9 +164,8 @@ export default function Goals() {
     const limit = new Date(start);
     limit.setDate(limit.getDate() + 10);
     const items = [];
-
     goals.forEach((g) => {
-      if (!g || !g.deadline) return;
+      if (!g?.deadline) return;
       const d = new Date(g.deadline);
       d.setHours(0, 0, 0, 0);
       if (d >= start && d <= limit) {
@@ -178,98 +176,134 @@ export default function Goals() {
         });
       }
     });
-
-    tasks.forEach((t) => {
-      if (!t || !t.date || t.done) return;
-      const d = new Date(t.date);
-      d.setHours(0, 0, 0, 0);
-      if (d >= start && d <= limit) {
-        items.push({
-          id: `task-${t.id}`,
-          title: t.text || "Task",
-          daysLeft: Math.round((d - start) / 86400000),
-        });
-      }
-    });
-
     return items.sort((a, b) => a.daysLeft - b.daysLeft).slice(0, 6);
-  }, [goals, tasks]);
+  }, [goals]);
 
-  const timelineStart = 8;
-  const timelineEnd = 20;
-  const timelineHours = Array.from(
-    { length: timelineEnd - timelineStart + 1 },
-    (_, i) => timelineStart + i
-  );
-
-  const parseTaskHour = (time) => {
-    if (!time) return null;
-    const value = String(time).trim().toUpperCase();
-    const match = value.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?/);
-    if (!match) return null;
-    let hour = Number(match[1]);
-    const minute = Number(match[2] || 0);
-    const meridiem = match[3];
-    if (meridiem === "PM" && hour < 12) hour += 12;
-    if (meridiem === "AM" && hour === 12) hour = 0;
-    if (!meridiem && hour < timelineStart) hour += 12;
-    return hour + minute / 60;
+  const stepsOf = (goal) => {
+    const list = Array.isArray(goal.tasks) ? goal.tasks : [];
+    return list.filter((t) => t.type === "step" || t.goal_id === goal.id);
   };
 
-  const timedTodayTasks = todayTasks.filter((t) => {
-    const h = parseTaskHour(t.time);
-    return h !== null && h >= timelineStart && h <= timelineEnd;
-  });
+  const renderMission = (g) => {
+    const steps = stepsOf(g);
+    const done = steps.filter((s) => s.done).length;
+    const total = steps.length;
+    const pct =
+      total > 0 ? Math.round((done / total) * 100) : Math.round(g.progress || 0);
+    const open = expandedId === g.id;
 
-  const anytimeTodayTasks = todayTasks.filter(
-    (t) => !timedTodayTasks.some((item) => item.id === t.id)
-  );
-
-  const now = new Date();
-  const currentHour = now.getHours() + now.getMinutes() / 60;
-  const currentTimePosition =
-    currentHour >= timelineStart && currentHour <= timelineEnd
-      ? ((currentHour - timelineStart) / (timelineEnd - timelineStart)) * 100
-      : null;
-
-  const goalCard = (title, subtitle, items, accent) => (
-    <section className="relative min-h-[190px] overflow-hidden rounded-[28px] border border-violet-200/[0.12] bg-gradient-to-br from-white/[0.065] via-white/[0.045] to-violet-500/[0.025] p-6 shadow-[0_0_32px_rgba(139,92,246,0.10)] backdrop-blur-2xl">
-      <div className={`pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full blur-3xl ${accent}`} />
-      <div className="relative mb-4 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-medium tracking-[0.18em] text-violet-300/55 uppercase">{subtitle}</p>
-          <h2 className="mt-1 text-lg font-semibold text-white">{title}</h2>
-        </div>
-        <span className="rounded-full border border-violet-300/15 bg-violet-400/10 px-2.5 py-1 text-[10px] text-violet-200/65">
-          {items.length}
-        </span>
-      </div>
-      {items.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-violet-200/[0.09] bg-white/[0.018] px-3 py-6 text-center">
-          <p className="text-xs text-white/30">No {title.toLowerCase()} yet</p>
-        </div>
-      ) : (
-        <div className="space-y-2.5">
-          {items.map((g) => (
-            <div key={g.id} className="rounded-2xl border border-white/[0.06] bg-[#101327]/65 p-3.5">
-              <div className="flex items-start justify-between gap-2">
-                <p className="min-w-0 text-sm font-medium text-white/85">{g.title}</p>
-                <span className="shrink-0 text-[10px] text-white/35">
-                  {g.completed_count ?? 0}/{g.target_count ?? 0}
-                </span>
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400"
-                  style={{ width: `${Math.min(g.progress || 0, 100)}%` }}
-                />
-              </div>
+    return (
+      <div
+        key={g.id}
+        className="rounded-2xl border border-white/[0.07] bg-[#101327]/70 p-4 transition hover:border-violet-300/20"
+      >
+        <button
+          type="button"
+          onClick={() => setExpandedId(open ? null : g.id)}
+          className="flex w-full items-start gap-3 text-left"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[10px] ${TYPE_CHIP[g.type] || TYPE_CHIP.weekly}`}
+              >
+                {TYPE_LABEL[g.type] || g.type}
+              </span>
+              <span className="text-[10px] text-white/30">
+                {total ? `${done}/${total} steps` : "No steps yet"}
+              </span>
             </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
+            <p className="mt-1.5 text-sm font-medium text-white/90">{g.title}</p>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400 transition-all duration-500"
+                style={{ width: `${Math.min(pct, 100)}%` }}
+              />
+            </div>
+            <p className="mt-1 text-[10px] text-white/35">{pct}% of path complete</p>
+          </div>
+          <span className="shrink-0 text-xs text-white/30">{open ? "▾" : "▸"}</span>
+        </button>
+
+        {open && (
+          <div className="mt-4 border-t border-white/[0.06] pt-4">
+            <p className="mb-3 text-[10px] font-medium tracking-[0.16em] text-violet-300/50 uppercase">
+              Path to this goal
+            </p>
+
+            {steps.length === 0 ? (
+              <p className="mb-3 text-xs text-white/30">
+                Add the steps that get you there — for a yearly goal, think months;
+                for monthly, think weeks or concrete milestones.
+              </p>
+            ) : (
+              <ol className="mb-3 space-y-2">
+                {steps.map((s, idx) => (
+                  <li key={s.id} className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleTask(s.id)}
+                      className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[10px] transition ${
+                        s.done
+                          ? "border-violet-400/50 bg-violet-500/30 text-white"
+                          : "border-white/15 bg-white/[0.03] text-white/40 hover:border-violet-300/40"
+                      }`}
+                      title={s.done ? "Mark incomplete" : "Mark done"}
+                    >
+                      {s.done ? "✓" : idx + 1}
+                    </button>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-sm ${
+                          s.done ? "text-white/40 line-through" : "text-white/80"
+                        }`}
+                      >
+                        {s.text}
+                      </p>
+                      {idx < steps.length - 1 ? (
+                        <div className="ml-2.5 mt-1 h-3 w-px bg-white/10" />
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                value={stepDraft[g.id] || ""}
+                onChange={(e) =>
+                  setStepDraft((prev) => ({ ...prev, [g.id]: e.target.value }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addStep(g.id);
+                  }
+                }}
+                placeholder={
+                  g.type === "year"
+                    ? "e.g. Finish Unit I by March…"
+                    : g.type === "monthly"
+                      ? "e.g. Complete 2 past papers this week…"
+                      : "Next step…"
+                }
+                className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-xs text-white outline-none placeholder:text-white/25 focus:border-violet-300/30"
+              />
+              <button
+                type="button"
+                disabled={stepBusy === g.id}
+                onClick={() => addStep(g.id)}
+                className="rounded-xl border border-violet-300/20 bg-violet-500/15 px-3 py-2 text-xs text-violet-100 hover:bg-violet-500/25 disabled:opacity-50"
+              >
+                {stepBusy === g.id ? "…" : "Add step"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -286,25 +320,34 @@ export default function Goals() {
 
       <header className="relative mb-8 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
-          <p className="mb-2 text-xs font-medium tracking-[0.22em] text-violet-300/65 uppercase">✦ Goal orbit</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Your goals</h1>
-          <p className="mt-2 text-sm text-white/40">Big picture above. Today in motion below.</p>
+          <p className="mb-2 text-xs font-medium tracking-[0.22em] text-violet-300/65 uppercase">
+            ✦ Goal orbit
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            Your goals
+          </h1>
+          <p className="mt-2 text-sm text-white/40">
+            Open a goal to see — and build — the steps on the path.
+          </p>
         </div>
-        <form onSubmit={createGoal} className="flex w-full flex-wrap gap-2 xl:w-auto xl:justify-end">
+        <form
+          onSubmit={createGoal}
+          className="flex w-full flex-wrap gap-2 xl:w-auto xl:justify-end"
+        >
           <input
             value={newGoalTitle}
             onChange={(e) => setNewGoalTitle(e.target.value)}
             placeholder="New goal…"
-            className="w-40 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-violet-300/30"
+            className="w-44 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2.5 text-sm text-white outline-none placeholder:text-white/25 focus:border-violet-300/30"
           />
           <select
             value={newGoalType}
             onChange={(e) => setNewGoalType(e.target.value)}
             className="rounded-xl border border-white/[0.08] bg-[#111225] px-3 py-2.5 text-xs text-white/65 outline-none"
           >
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
             <option value="year">Yearly</option>
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
           </select>
           <button
             type="submit"
@@ -321,31 +364,122 @@ export default function Goals() {
         </div>
       ) : null}
 
-      <div className="relative grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.55fr_0.95fr]">
-        <aside className="flex flex-col gap-6">
-          {goalCard("Yearly Goals", "Long horizon", yearlyGoals, "bg-violet-500/15")}
-          {goalCard("Monthly Goals", "This month", monthlyGoals, "bg-fuchsia-500/12")}
+      <div className="relative grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1.15fr_0.9fr]">
+        {/* Left: summary lists */}
+        <aside className="flex flex-col gap-5">
+          <section className="rounded-[28px] border border-violet-200/[0.12] bg-white/[0.045] p-5 backdrop-blur-2xl">
+            <p className="text-[10px] tracking-[0.18em] text-violet-300/50 uppercase">
+              Long horizon
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-white">Yearly</h2>
+            <p className="mt-1 text-[11px] text-white/30">
+              Big outcomes — break into steps when you open them.
+            </p>
+            <div className="mt-4 space-y-2">
+              {yearlyGoals.length === 0 ? (
+                <p className="text-xs text-white/25">No yearly goals yet</p>
+              ) : (
+                yearlyGoals.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setExpandedId(g.id)}
+                    className="flex w-full items-center justify-between rounded-xl border border-white/[0.05] bg-white/[0.03] px-3 py-2.5 text-left hover:border-violet-300/20"
+                  >
+                    <span className="truncate text-sm text-white/80">{g.title}</span>
+                    <span className="shrink-0 text-[10px] text-white/35">
+                      {Math.round(g.progress || 0)}%
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-[28px] border border-violet-200/[0.12] bg-white/[0.045] p-5 backdrop-blur-2xl">
+            <p className="text-[10px] tracking-[0.18em] text-cyan-300/50 uppercase">
+              This orbit
+            </p>
+            <h2 className="mt-1 text-lg font-semibold text-white">Monthly</h2>
+            <p className="mt-1 text-[11px] text-white/30">
+              Month targets — steps can be weekly milestones.
+            </p>
+            <div className="mt-4 space-y-2">
+              {monthlyGoals.length === 0 ? (
+                <p className="text-xs text-white/25">No monthly goals yet</p>
+              ) : (
+                monthlyGoals.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setExpandedId(g.id)}
+                    className="flex w-full items-center justify-between rounded-xl border border-white/[0.05] bg-white/[0.03] px-3 py-2.5 text-left hover:border-cyan-300/20"
+                  >
+                    <span className="truncate text-sm text-white/80">{g.title}</span>
+                    <span className="shrink-0 text-[10px] text-white/35">
+                      {Math.round(g.progress || 0)}%
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </section>
         </aside>
 
-        <div className="hidden min-h-[380px] xl:block" aria-hidden="true" />
+        {/* Center: active missions with step paths */}
+        <section className="rounded-[28px] border border-violet-200/[0.14] bg-gradient-to-br from-white/[0.07] via-white/[0.04] to-violet-500/[0.03] p-5 backdrop-blur-2xl sm:p-6">
+          <div className="mb-5">
+            <p className="text-[10px] tracking-[0.18em] text-violet-300/55 uppercase">
+              Active missions
+            </p>
+            <h2 className="mt-1 text-xl font-semibold text-white">Path & progress</h2>
+            <p className="mt-1 text-xs text-white/35">
+              Click a goal → see the steps → check them off as you go.
+            </p>
+          </div>
 
+          {activeMissions.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/[0.08] px-4 py-12 text-center">
+              <p className="text-sm text-white/35">No goals yet</p>
+              <p className="mt-1 text-xs text-white/25">
+                Add a yearly or monthly goal above, then open it and add steps.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">{activeMissions.map(renderMission)}</div>
+          )}
+        </section>
+
+        {/* Right: calendar + deadlines */}
         <aside className="flex flex-col gap-5">
-          <div className="relative overflow-hidden rounded-[28px] border border-violet-200/[0.12] bg-white/[0.045] p-5 backdrop-blur-2xl">
+          <div className="rounded-[28px] border border-violet-200/[0.12] bg-white/[0.045] p-5 backdrop-blur-2xl">
             <div className="mb-5 flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
+                onClick={() =>
+                  setViewDate(
+                    new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1)
+                  )
+                }
                 className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.04] text-white/35 hover:text-white"
               >
                 ‹
               </button>
               <div className="text-center">
-                <p className="text-[10px] tracking-[0.16em] text-violet-300/50 uppercase">Orbit</p>
-                <h2 className="mt-0.5 text-sm font-semibold text-white">{calendar.label}</h2>
+                <p className="text-[10px] tracking-[0.16em] text-violet-300/50 uppercase">
+                  Orbit
+                </p>
+                <h2 className="mt-0.5 text-sm font-semibold text-white">
+                  {calendar.label}
+                </h2>
               </div>
               <button
                 type="button"
-                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
+                onClick={() =>
+                  setViewDate(
+                    new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1)
+                  )
+                }
                 className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.04] text-white/35 hover:text-white"
               >
                 ›
@@ -386,7 +520,9 @@ export default function Goals() {
           <div className="rounded-[28px] border border-violet-200/[0.12] bg-white/[0.045] p-5 backdrop-blur-2xl">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-[10px] tracking-[0.18em] text-violet-300/50 uppercase">Coming up</p>
+                <p className="text-[10px] tracking-[0.18em] text-violet-300/50 uppercase">
+                  Coming up
+                </p>
                 <h2 className="mt-1 text-base font-semibold text-white">Deadlines</h2>
               </div>
               <span className="rounded-full border border-violet-300/15 bg-violet-400/10 px-2.5 py-1 text-[10px] text-violet-200/65">
@@ -394,28 +530,17 @@ export default function Goals() {
               </span>
             </div>
             {nearDeadlines.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-white/[0.07] px-4 py-7 text-center">
-                <p className="text-xs text-white/30">No deadlines nearby</p>
-              </div>
+              <p className="py-4 text-center text-xs text-white/30">No deadlines nearby</p>
             ) : (
               <ul className="space-y-2">
-                {nearDeadlines.map((e, idx) => (
+                {nearDeadlines.map((e) => (
                   <li
                     key={e.id}
                     className="flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.025] px-3 py-3"
                   >
-                    <span
-                      className={`h-2 w-2 shrink-0 rounded-full ${
-                        e.daysLeft <= 2
-                          ? "bg-rose-400"
-                          : e.daysLeft <= 5
-                            ? "bg-amber-400"
-                            : idx % 2 === 0
-                              ? "bg-violet-400"
-                              : "bg-cyan-400"
-                      }`}
-                    />
-                    <span className="min-w-0 flex-1 truncate text-xs text-white/65">{e.title}</span>
+                    <span className="min-w-0 flex-1 truncate text-xs text-white/65">
+                      {e.title}
+                    </span>
                     <span className="shrink-0 text-[10px] text-white/30">{e.daysLeft}d</span>
                   </li>
                 ))}
@@ -425,14 +550,14 @@ export default function Goals() {
         </aside>
       </div>
 
+      {/* Today timeline */}
       <section className="relative mt-6 overflow-hidden rounded-[30px] border border-violet-200/[0.14] bg-white/[0.05] p-5 backdrop-blur-2xl sm:p-6">
-        <div className="relative mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] font-medium tracking-[0.2em] text-violet-300/60 uppercase">Daily timeline</p>
-            <h2 className="mt-1 text-xl font-semibold text-white">Today</h2>
-            <p className="mt-1 text-xs text-white/30">
-              {today.toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric" })}
+            <p className="text-[10px] tracking-[0.2em] text-violet-300/60 uppercase">
+              Daily
             </p>
+            <h2 className="mt-1 text-xl font-semibold text-white">Today’s tasks</h2>
           </div>
           <form onSubmit={createTask} className="flex gap-2">
             <input
@@ -450,91 +575,39 @@ export default function Goals() {
           </form>
         </div>
 
-        <div className="relative min-h-[250px] overflow-x-auto rounded-2xl border border-white/[0.06] bg-[#0d1022]/50 p-4">
-          <div className="relative min-w-[640px]">
-            <div className="mb-8 flex" style={{ paddingLeft: 80 }}>
-              {timelineHours.map((h) => (
-                <div key={h} className="flex-1 text-center text-[10px] text-white/30">
-                  {h}:00
-                </div>
-              ))}
-            </div>
-
-            <div className="relative h-40 border-t border-white/[0.06]">
-              {timelineHours.map((h, i) => (
-                <div
-                  key={h}
-                  className="absolute top-0 bottom-0 border-l border-white/[0.04]"
-                  style={{
-                    left: `calc(80px + ${(i / (timelineHours.length - 1)) * 100}% * (100% - 80px) / 100)`,
-                  }}
-                />
-              ))}
-
-              {timedTodayTasks.length === 0 ? (
-                <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-white/25">
-                  No timed tasks yet — add one above
-                </p>
-              ) : (
-                timedTodayTasks.map((task, index) => {
-                  const h = parseTaskHour(task.time);
-                  const left = ((h - timelineStart) / (timelineEnd - timelineStart)) * 100;
-                  const colors = [
-                    "from-violet-500/90 to-fuchsia-500/80",
-                    "from-cyan-500/90 to-blue-500/80",
-                    "from-amber-400/90 to-orange-500/75",
-                  ];
-                  return (
-                    <button
-                      key={task.id}
-                      type="button"
-                      onClick={() => toggleTask(task.id)}
-                      className={`absolute z-20 w-36 -translate-y-1/2 rounded-xl border border-white/15 bg-gradient-to-r ${colors[index % colors.length]} px-3 py-2.5 text-left ${task.done ? "opacity-45" : ""}`}
-                      style={{
-                        left: `calc(80px + ${Math.min(Math.max(left, 0), 94)}% * (100% - 80px) / 100)`,
-                        top: `${52 + (index % 3) * 58}px`,
-                      }}
-                    >
-                      <p className="text-[10px] text-white/70">{task.time}</p>
-                      <p className={`mt-0.5 truncate text-xs font-medium text-white ${task.done ? "line-through" : ""}`}>
-                        {task.text}
-                      </p>
-                    </button>
-                  );
-                })
-              )}
-
-              {currentTimePosition !== null ? (
-                <div
-                  className="pointer-events-none absolute top-0 bottom-0 z-30 w-px bg-fuchsia-300/70"
-                  style={{
-                    left: `calc(80px + ${currentTimePosition}% * (100% - 80px) / 100)`,
-                  }}
+        {todayTasks.length === 0 ? (
+          <p className="py-8 text-center text-xs text-white/30">No tasks for today yet</p>
+        ) : (
+          <ul className="space-y-2">
+            {todayTasks.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  onClick={() => toggleTask(t.id)}
+                  className={`flex w-full items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5 text-left ${
+                    t.done ? "opacity-50" : ""
+                  }`}
                 >
-                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-fuchsia-400/90 px-2 py-1 text-[9px] font-medium text-white">
-                    now
-                  </span>
-                </div>
-              ) : null}
-            </div>
-
-            {anytimeTodayTasks.length > 0 ? (
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-[10px] tracking-[0.16em] text-white/25 uppercase">Anytime</span>
-                {anytimeTodayTasks.map((task) => (
-                  <button
-                    key={`any-${task.id}`}
-                    type="button"
-                    onClick={() => toggleTask(task.id)}
-                    className={`rounded-full border border-violet-300/15 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-100/75 ${task.done ? "opacity-45 line-through" : ""}`}
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] ${
+                      t.done
+                        ? "border-violet-400/50 bg-violet-500/30"
+                        : "border-white/20"
+                    }`}
                   >
-                    {task.text}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
+                    {t.done ? "✓" : ""}
+                  </span>
+                  <span className={`text-sm ${t.done ? "line-through text-white/40" : "text-white/80"}`}>
+                    {t.text}
+                  </span>
+                  {t.time ? (
+                    <span className="ml-auto text-[10px] text-white/30">{t.time}</span>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );
