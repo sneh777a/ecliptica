@@ -2,10 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { createApi, formatApiError } from "../api";
 
 const QUICK = [
-  "What should I do today based on my goals?",
-  "Create a yearly TOC goal with steps",
-  "Break down my monthly goals into steps",
-  "I missed tasks — help me catch up",
+  "what should i focus on today?",
+  "exam next week help me plan",
+  "put a TOC goal in my app with steps",
+  "i fell behind, help me catch up",
 ];
 
 export default function Assistant() {
@@ -13,7 +13,7 @@ export default function Assistant() {
     {
       role: "assistant",
       text:
-        "Hi — I'm Ecliptica AI. I can see your goals, steps, and tasks. Ask me to plan, or say things like “add a yearly goal for TOC with 5 steps” and I'll save them in Goals.",
+        "Hey — talk to me like a normal chat. Short notes, typos, ‘exam next week help’ — all fine.\n\nI can see your goals and tasks. If you want something saved, just say things like “put this in my goals” or “ok save that plan”.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -89,7 +89,7 @@ export default function Assistant() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Assistant</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Reads your Goals & tasks · can create goals and steps for you
+          Natural chat · reads your goals · can save plans when you want
         </p>
       </div>
 
@@ -140,7 +140,7 @@ export default function Assistant() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder='e.g. "Add yearly goal Complete TOC with 5 study steps"'
+          placeholder="type however you talk — e.g. exam in 4 days toc help"
           disabled={loading}
           className="flex-1 rounded-xl border border-gray-700 bg-[#0b0b0f] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none disabled:opacity-60"
         />
