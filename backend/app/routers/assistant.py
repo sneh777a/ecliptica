@@ -47,9 +47,9 @@ def _build_model():
             detail="GEMINI_API_KEY is not configured on the server",
         )
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    # Fast, cheap model suitable for chat planning
+    # Current Gemini flash model (2.0-flash was retired)
     return genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
+        model_name="gemini-3.8-flash",
         system_instruction=SYSTEM_PROMPT,
     )
 
