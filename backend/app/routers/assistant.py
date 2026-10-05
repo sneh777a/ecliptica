@@ -1,7 +1,7 @@
 import json
 import re
-from datetime import date as date_cls
-from typing import Any, Dict, List, Optional
+from datetime import date as date_cls, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -17,6 +17,14 @@ from app.models.goal import Goal, Task
 from app.utils.deps import get_current_user
 
 router = APIRouter(prefix="/assistant", tags=["Assistant"])
+
+# Free tier: Flash-Lite has much higher daily quota than full Flash models.
+GEMINI_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash",
+    "gemini-3.8-flash",
+]
 
 SYSTEM_PROMPT = """You are Ecliptica AI — a warm, practical personal coach inside the user's life app.
 
@@ -58,6 +66,16 @@ REPLY STYLE
 Friendly, concrete, short bullets. One next question when helpful.
 """
 
+TOC_STEPS = [
+    "DFA / NFA conversions & minimization",
+    "Regular expressions & Pumping Lemma",
+    "CFG derivations & ambiguity",
+    "PDA design practice",
+    "Turing machines & Halting Problem",
+    "Closure properties table (memorize)",
+    "Timed past-paper sprint",
+]
+
 
 class ChatMessage(BaseModel):
     role: str = Field(..., description="user or assistant")
@@ -74,7 +92,12 @@ class ChatResponse(BaseModel):
     actions_applied: List[str] = []
 
 
-def _build_model():
+def _is_quota_error(err: Exception) -> bool:
+    text = str(err).lower()
+    return "429" in text or "quota" in text or "resource_exhausted" in text or "rate" in text
+
+
+def _build_model(model_name: str):
     if not settings.GEMINI_API_KEY:
         raise HTTPException(
             status_code=503,
@@ -82,7 +105,7 @@ def _build_model():
         )
     genai.configure(api_key=settings.GEMINI_API_KEY)
     return genai.GenerativeModel(
-        model_name="gemini-3.8-flash",
+        model_name=model_name,
         system_instruction=SYSTEM_PROMPT,
     )
 
@@ -179,7 +202,6 @@ def _resolve_goal_id(title_to_id: Dict[str, int], goal_title: str) -> Optional[i
     for stored, gid in title_to_id.items():
         if key in stored or stored in key:
             return gid
-    # token overlap (TOC vs TOC Exam Prep)
     key_tokens = set(key.replace("-", " ").split())
     best_id = None
     best_score = 0
@@ -200,6 +222,96 @@ def _parse_date(value: Optional[str]) -> Optional[date_cls]:
         return date_cls.fromisoformat(value[:10])
     except ValueError:
         return None
+
+
+def _wants_save(text: str) -> bool:
+    t = text.lower()
+    keys = [
+        "add",
+        "save",
+        "put",
+        "create",
+        "track",
+        "in my goal",
+        "in my goals",
+        "my gole",
+        "my goal",
+        "set up",
+        "setup",
+    ]
+    return any(k in t for k in keys)
+
+
+def _offline_plan(
+    message: str,
+    history: List[ChatMessage],
+) -> Optional[Tuple[str, List[Dict[str, Any]]]]:
+    """Simple rule-based helper when Gemini quota is exhausted."""
+    blob = " ".join(
+        [(m.text or "") for m in (history or [])] + [message]
+    ).lower()
+
+    # TOC / theory of computation exam path
+    toc = any(
+        x in blob
+        for x in (
+            "toc",
+            "theory of computation",
+            "automata",
+            "dfa",
+            "turing",
+        )
+    )
+    examish = any(x in blob for x in ("exam", "paper", "test", "midterm"))
+    save = _wants_save(message) or _wants_save(blob)
+
+    if toc and (examish or save or "plan" in blob):
+        deadline = (date_cls.today() + timedelta(days=7)).isoformat()
+        title = "TOC Exam Prep"
+        actions: List[Dict[str, Any]] = []
+        if save or "goal" in blob or "gole" in blob:
+            actions.append(
+                {
+                    "action": "create_goal",
+                    "title": title,
+                    "type": "monthly",
+                    "deadline": deadline,
+                }
+            )
+            for step in TOC_STEPS:
+                actions.append(
+                    {
+                        "action": "add_step",
+                        "goal_title": title,
+                        "text": step,
+                    }
+                )
+            reply = (
+                "Gemini free quota is temporarily full, so I used the built-in TOC crash plan.\n\n"
+                f"I’ll keep **{title}** as a monthly goal (deadline ~{deadline}) with these steps:\n"
+                + "\n".join(f"• {s}" for s in TOC_STEPS)
+                + "\n\nOpen **Goals**, expand the goal, and check steps off as you go."
+            )
+            return reply, actions
+
+        reply = (
+            "Gemini free quota is temporarily full — here’s a TOC crash plan without AI:\n\n"
+            + "\n".join(f"{i}. {s}" for i, s in enumerate(TOC_STEPS, 1))
+            + "\n\nSay **add in my goals** and I’ll save these as goal steps even while AI quota is limited."
+        )
+        return reply, []
+
+    if save and not toc:
+        reply = (
+            "Gemini free quota is full right now, so I can’t invent a custom plan.\n\n"
+            "You can still:\n"
+            "• Add a goal manually on the **Goals** page\n"
+            "• Or say something like **TOC exam add in my goals** (built-in plan works offline)\n\n"
+            "Quota usually resets around midnight Pacific time, or switch the Gemini key to a project with Flash-Lite."
+        )
+        return reply, []
+
+    return None
 
 
 async def _apply_actions(
@@ -345,10 +457,10 @@ async def chat(
         raise HTTPException(status_code=400, detail="Message is required")
 
     context = await _user_context(db, current_user)
-    model = _build_model()
 
+    history_msgs = body.history or []
     history = []
-    for item in body.history or []:
+    for item in history_msgs:
         role = (item.role or "").lower()
         text = (item.text or "").strip()
         if not text:
@@ -367,36 +479,63 @@ async def chat(
         f"[USER SAID — interpret naturally]\n{message}"
     )
 
-    try:
-        chat_session = model.start_chat(history=history)
-        result = chat_session.send_message(augmented)
-        raw = (getattr(result, "text", None) or "").strip()
-        if not raw:
-            return ChatResponse(
-                reply="I could not generate a reply. Please try again.",
-                actions_applied=[],
+    last_err: Optional[Exception] = None
+    raw = ""
+
+    for model_name in GEMINI_MODELS:
+        try:
+            model = _build_model(model_name)
+            chat_session = model.start_chat(history=history)
+            result = chat_session.send_message(augmented)
+            raw = (getattr(result, "text", None) or "").strip()
+            if raw:
+                break
+        except Exception as e:
+            last_err = e
+            if _is_quota_error(e):
+                # try next model, then offline fallback
+                continue
+            # non-quota error: still try next model once, else fail
+            continue
+
+    if not raw:
+        offline = _offline_plan(message, history_msgs)
+        if offline:
+            reply, actions = offline
+            applied = await _apply_actions(db, current_user, actions) if actions else []
+            if applied:
+                reply = reply + "\n\n—\n" + "\n".join(f"✓ {a}" for a in applied)
+            return ChatResponse(reply=reply, actions_applied=applied)
+
+        if last_err and _is_quota_error(last_err):
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "Gemini free quota is used up for today. "
+                    "Try again after midnight Pacific time, or create a new Google AI Studio "
+                    "project and set GEMINI_API_KEY on Render to a Flash-Lite key. "
+                    "Meanwhile: use Goals page manually, or say ‘TOC exam add in my goals’ "
+                    "for the built-in offline plan."
+                ),
             )
-
-        reply, actions = _split_actions(raw)
-        applied: List[str] = []
-        if actions:
-            applied = await _apply_actions(db, current_user, actions)
-
-        if not reply:
-            reply = (
-                "Got it — I updated your app."
-                if applied
-                else "I could not generate a reply. Please try again."
-            )
-
-        if applied:
-            reply = reply + "\n\n—\n" + "\n".join(f"✓ {a}" for a in applied)
-
-        return ChatResponse(reply=reply, actions_applied=applied)
-    except HTTPException:
-        raise
-    except Exception as e:
         raise HTTPException(
             status_code=502,
-            detail=f"Gemini request failed: {str(e)[:200]}",
-        ) from e
+            detail=f"Gemini request failed: {str(last_err)[:200] if last_err else 'empty reply'}",
+        )
+
+    reply, actions = _split_actions(raw)
+    applied: List[str] = []
+    if actions:
+        applied = await _apply_actions(db, current_user, actions)
+
+    if not reply:
+        reply = (
+            "Got it — I updated your app."
+            if applied
+            else "I could not generate a reply. Please try again."
+        )
+
+    if applied:
+        reply = reply + "\n\n—\n" + "\n".join(f"✓ {a}" for a in applied)
+
+    return ChatResponse(reply=reply, actions_applied=applied)
