@@ -18,7 +18,6 @@ from app.utils.deps import get_current_user
 
 router = APIRouter(prefix="/assistant", tags=["Assistant"])
 
-# Free tier: Flash-Lite has much higher daily quota than full Flash models.
 GEMINI_MODELS = [
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
@@ -26,44 +25,45 @@ GEMINI_MODELS = [
     "gemini-3.8-flash",
 ]
 
-SYSTEM_PROMPT = """You are Ecliptica AI — a warm, practical personal coach inside the user's life app.
+SYSTEM_PROMPT = """You are Ecliptica AI — the same kind of capable assistant as Gemini, living inside the user's personal OS app.
 
-LANGUAGE
-- Understand natural, messy, informal English. Typos and short notes are fine.
-- Infer intent from context + chat history. No rigid command words required.
+You are NOT restricted to short formal answers. You can:
+- Explain subjects in depth (exams, theory, code, life planning)
+- Brainstorm freely
+- Be casual, detailed, or structured depending on what they need
+- Follow the conversation naturally with typos, short messages, and mixed language
 
-APP DATA
-- You always get a live snapshot of goals, steps, and tasks. Use real names.
-- Don't invent goals they already have; extend them.
+You ALWAYS receive LIVE data from their Ecliptica account:
+- Goals (yearly / monthly / weekly) with steps and progress
+- Tasks (today, upcoming, done/todo)
+- A dashboard-style summary (deadlines, open work)
 
-WHEN TO SAVE
-Emit ACTIONS when they want something kept in the app, e.g. "put this in my goals",
-"save that plan", "ok do it", "add those steps", "track this".
-Do NOT save for pure advice questions.
+Use that data. Refer to real goal titles and progress. Prefer facts from LIVE DATA over guesses.
 
-WHERE TO SAVE (important)
-- If they say goals / goal / milestones / path / steps / "in my goals" → use create_goal + add_step.
-  Daily create_task alone will NOT show under Goals path.
-- If a matching goal already exists (e.g. TOC Exam Prep), only add_step to that goal.
-- If no goal exists, create_goal (usually type monthly for exams) then add_step for each study block.
-- Use create_task only for one-off calendar to-dos when they ask for a schedule on specific days
-  AND also still add_step if they asked to put it in goals.
+MODULES STATUS (be honest):
+- Goals + Tasks + Dashboard schedule: LIVE on the server — you can read and write.
+- Health page: UI exists (habits, water) but is mostly local/browser for now — no server health rows yet. You can still coach habits and suggest routines.
+- Finance page: UI placeholder only — no transactions on the server yet. You can still help budget plans and later save related goals/tasks.
 
-HOW TO SAVE (append at end of reply only)
+WHEN YOU CAN CHANGE THE APP
+If they want something stored (create a goal, add steps, schedule tasks), end your normal reply with an actions block the app will run:
+
 <<<ACTIONS
 [
-  {"action":"create_goal","title":"TOC Exam Prep","type":"monthly","deadline":"2026-10-09"},
-  {"action":"add_step","goal_title":"TOC Exam Prep","text":"DFA/NFA conversions & minimization"},
-  {"action":"add_step","goal_title":"TOC Exam Prep","text":"Regular Pumping Lemma practice"}
+  {"action":"create_goal","title":"...","type":"year|monthly|weekly","deadline":"YYYY-MM-DD","description":"optional"},
+  {"action":"add_step","goal_title":"...","text":"..."},
+  {"action":"create_task","text":"...","date":"YYYY-MM-DD","time":"optional"}
 ]
 ACTIONS>>>
 
-Types: year | monthly | weekly
-Keep 3–7 steps unless they ask for more.
-goal_title must match an existing goal or one created in the same list.
+Rules for actions:
+- Put ACTIONS only at the end, never in the middle of the answer.
+- Prefer add_step / create_goal for study plans and multi-step work (so it shows under Goals).
+- create_task is for dated daily items on the schedule.
+- If a goal already exists with a similar name, extend it with add_step instead of duplicating.
+- You may proactively offer to save a plan; if they agree (yes / ok / save / add / put in goals), emit ACTIONS.
 
-REPLY STYLE
-Friendly, concrete, short bullets. One next question when helpful.
+Talk like a full assistant: no artificial limits on length, topic depth, or tone — only stay helpful and grounded in their Ecliptica data when relevant.
 """
 
 TOC_STEPS = [
@@ -120,21 +120,53 @@ async def _user_context(db: AsyncSession, user: User) -> str:
     goals = goals_result.scalars().all()
 
     tasks_result = await db.execute(
-        select(Task).where(Task.user_id == user.id).order_by(Task.id.desc()).limit(40)
+        select(Task).where(Task.user_id == user.id).order_by(Task.id.desc()).limit(50)
     )
     tasks = tasks_result.scalars().all()
 
-    today = date_cls.today().isoformat()
+    today = date_cls.today()
+    today_s = today.isoformat()
+    tomorrow_s = (today + timedelta(days=1)).isoformat()
+    limit = today + timedelta(days=10)
+
     lines: List[str] = [
-        f"Today's date: {today}",
+        f"Today's date: {today_s}",
         f"User name: {user.name}",
+        f"User email: {user.email}",
         "",
-        "=== GOALS (live) ===",
+        "=== DASHBOARD SNAPSHOT ===",
     ]
 
+    today_tasks = [
+        t
+        for t in tasks
+        if t.type != "step"
+        and (
+            (t.date and str(t.date)[:10] == today_s)
+            or (t.type == "daily" and t.date is None)
+        )
+    ]
+    tomorrow_tasks = [
+        t for t in tasks if t.type != "step" and t.date and str(t.date)[:10] == tomorrow_s
+    ]
+    open_tasks = [t for t in tasks if t.type != "step" and not t.done]
+
+    lines.append(f"Open tasks (non-step): {len(open_tasks)}")
+    lines.append(f"Today's schedule items: {len(today_tasks)}")
+    lines.append(f"Tomorrow's schedule items: {len(tomorrow_tasks)}")
+    for t in today_tasks[:8]:
+        mark = "done" if t.done else "todo"
+        lines.append(f"  today [{mark}] {t.text} @ {t.time or '-'}")
+    for t in tomorrow_tasks[:6]:
+        mark = "done" if t.done else "todo"
+        lines.append(f"  tomorrow [{mark}] {t.text} @ {t.time or '-'}")
+
+    lines.append("")
+    lines.append("=== GOALS (live) ===")
     if not goals:
         lines.append("(no goals yet)")
     else:
+        near = []
         for g in goals:
             lines.append(
                 f"- [{g.type}] «{g.title}» | progress {g.progress}% "
@@ -147,21 +179,40 @@ async def _user_context(db: AsyncSession, user: User) -> str:
                     lines.append(f"    step [{mark}]: {s.text}")
             else:
                 lines.append("    (no steps yet)")
+            if g.deadline:
+                try:
+                    d = date_cls.fromisoformat(str(g.deadline)[:10])
+                    if today <= d <= limit:
+                        near.append(f"{g.title} in {(d - today).days}d")
+                except ValueError:
+                    pass
+        if near:
+            lines.append("Near deadlines (<10d): " + "; ".join(near))
 
     lines.append("")
-    lines.append("=== TASKS (live, non-step) ===")
+    lines.append("=== ALL RECENT TASKS ===")
     plain = [t for t in tasks if t.type != "step"]
     if not plain:
         lines.append("(none)")
     else:
-        for t in plain[:25]:
+        for t in plain[:30]:
             mark = "done" if t.done else "todo"
             lines.append(
-                f"- [{mark}] {t.text} | date={t.date or '-'} time={t.time or '-'}"
+                f"- [{mark}] {t.text} | date={t.date or '-'} time={t.time or '-'} type={t.type}"
             )
 
     lines.append("")
-    lines.append("Health & Finance: no server data yet (UI only).")
+    lines.append("=== HEALTH ===")
+    lines.append(
+        "Server has no health rows yet. Health UI is local (habits, water). "
+        "Coach freely; cannot persist water/habits until Health API exists."
+    )
+    lines.append("")
+    lines.append("=== FINANCE ===")
+    lines.append(
+        "Server has no finance rows yet (page is a placeholder). "
+        "You can still plan budgets and create finance-related goals/tasks."
+    )
     return "\n".join(lines)
 
 
@@ -246,21 +297,11 @@ def _offline_plan(
     message: str,
     history: List[ChatMessage],
 ) -> Optional[Tuple[str, List[Dict[str, Any]]]]:
-    """Simple rule-based helper when Gemini quota is exhausted."""
-    blob = " ".join(
-        [(m.text or "") for m in (history or [])] + [message]
-    ).lower()
+    blob = " ".join([(m.text or "") for m in (history or [])] + [message]).lower()
 
-    # TOC / theory of computation exam path
     toc = any(
         x in blob
-        for x in (
-            "toc",
-            "theory of computation",
-            "automata",
-            "dfa",
-            "turing",
-        )
+        for x in ("toc", "theory of computation", "automata", "dfa", "turing")
     )
     examish = any(x in blob for x in ("exam", "paper", "test", "midterm"))
     save = _wants_save(message) or _wants_save(blob)
@@ -280,34 +321,29 @@ def _offline_plan(
             )
             for step in TOC_STEPS:
                 actions.append(
-                    {
-                        "action": "add_step",
-                        "goal_title": title,
-                        "text": step,
-                    }
+                    {"action": "add_step", "goal_title": title, "text": step}
                 )
             reply = (
-                "Gemini free quota is temporarily full, so I used the built-in TOC crash plan.\n\n"
-                f"I’ll keep **{title}** as a monthly goal (deadline ~{deadline}) with these steps:\n"
+                "AI quota is limited right now, so I used the built-in TOC plan.\n\n"
+                f"**{title}** (monthly, ~{deadline}):\n"
                 + "\n".join(f"• {s}" for s in TOC_STEPS)
-                + "\n\nOpen **Goals**, expand the goal, and check steps off as you go."
+                + "\n\nCheck **Goals** to tick steps."
             )
             return reply, actions
 
         reply = (
-            "Gemini free quota is temporarily full — here’s a TOC crash plan without AI:\n\n"
+            "AI quota is limited — TOC crash list:\n\n"
             + "\n".join(f"{i}. {s}" for i, s in enumerate(TOC_STEPS, 1))
-            + "\n\nSay **add in my goals** and I’ll save these as goal steps even while AI quota is limited."
+            + "\n\nSay **add in my goals** to save these offline."
         )
         return reply, []
 
     if save and not toc:
         reply = (
-            "Gemini free quota is full right now, so I can’t invent a custom plan.\n\n"
-            "You can still:\n"
-            "• Add a goal manually on the **Goals** page\n"
-            "• Or say something like **TOC exam add in my goals** (built-in plan works offline)\n\n"
-            "Quota usually resets around midnight Pacific time, or switch the Gemini key to a project with Flash-Lite."
+            "AI free quota is full for deeper chat right now.\n\n"
+            "• Use the **Goals** page to add goals/steps manually\n"
+            "• Or: **TOC exam add in my goals** (offline plan)\n"
+            "Quota resets ~midnight Pacific, or put a new Flash-Lite key on Render."
         )
         return reply, []
 
@@ -471,12 +507,12 @@ async def chat(
             cleaned = re.sub(r"\n—\n[\s\S]*$", "", text).strip()
             if cleaned:
                 history.append({"role": "model", "parts": [cleaned]})
-    history = history[-12:]
+    history = history[-16:]
 
     augmented = (
-        "[LIVE APP DATA — prefer this over guesses]\n"
+        "[ECLIPTICA LIVE DATA — trust this; monitor and use it freely]\n"
         f"{context}\n\n"
-        f"[USER SAID — interpret naturally]\n{message}"
+        f"[USER MESSAGE]\n{message}"
     )
 
     last_err: Optional[Exception] = None
@@ -492,10 +528,6 @@ async def chat(
                 break
         except Exception as e:
             last_err = e
-            if _is_quota_error(e):
-                # try next model, then offline fallback
-                continue
-            # non-quota error: still try next model once, else fail
             continue
 
     if not raw:
@@ -512,10 +544,8 @@ async def chat(
                 status_code=429,
                 detail=(
                     "Gemini free quota is used up for today. "
-                    "Try again after midnight Pacific time, or create a new Google AI Studio "
-                    "project and set GEMINI_API_KEY on Render to a Flash-Lite key. "
-                    "Meanwhile: use Goals page manually, or say ‘TOC exam add in my goals’ "
-                    "for the built-in offline plan."
+                    "Try again after midnight Pacific, or set a new Flash-Lite API key on Render. "
+                    "Meanwhile: Goals page works fully; say ‘TOC exam add in my goals’ for offline plan."
                 ),
             )
         raise HTTPException(
