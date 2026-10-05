@@ -13,7 +13,7 @@ export default function Assistant() {
     {
       role: "assistant",
       text:
-        "Hey — talk to me like a normal chat. Short notes, typos, ‘exam next week help’ — all fine.\n\nI can see your goals and tasks. If you want something saved, just say things like “put this in my goals” or “ok save that plan”.",
+        "Hey — talk to me like a normal chat. Short notes, typos, ‘exam next week help’ — all fine.\n\nI can see your goals and tasks. If you want something saved, say “put this in my goals” or “ok save that plan as steps”.\n\nTip: if the first message fails, open the API once (ecliptica-api.onrender.com) and retry — free hosting sleeps when idle.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -41,7 +41,8 @@ export default function Assistant() {
     setLoading(true);
 
     try {
-      const api = createApi(token);
+      // Gemini + free Render cold start can take a while
+      const api = createApi(token, 120000);
       const history = messages
         .filter((m) => m.text)
         .slice(-10)
@@ -89,7 +90,7 @@ export default function Assistant() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Assistant</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Natural chat · reads your goals · can save plans when you want
+          Natural chat · reads your goals · saves steps when you ask
         </p>
       </div>
 
@@ -131,7 +132,9 @@ export default function Assistant() {
           </div>
         ))}
         {loading ? (
-          <div className="px-1 text-xs text-gray-500">Thinking…</div>
+          <div className="px-1 text-xs text-gray-500">
+            Thinking… (first reply after idle can take up to ~1 min)
+          </div>
         ) : null}
         <div ref={bottomRef} />
       </div>
@@ -140,7 +143,7 @@ export default function Assistant() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="type however you talk — e.g. exam in 4 days toc help"
+          placeholder="e.g. put TOC plan in my goals as steps"
           disabled={loading}
           className="flex-1 rounded-xl border border-gray-700 bg-[#0b0b0f] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none disabled:opacity-60"
         />
