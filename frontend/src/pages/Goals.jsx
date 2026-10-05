@@ -353,8 +353,15 @@ export default function Goals() {
       </header>
 
       {error ? (
-        <div className="relative mb-5 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200/90">
-          {String(error)}
+        <div className="relative mb-5 flex flex-col gap-2 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200/90 sm:flex-row sm:items-center sm:justify-between">
+          <span>{String(error)}</span>
+          <button
+            type="button"
+            onClick={loadData}
+            className="shrink-0 rounded-xl border border-red-300/30 bg-red-500/20 px-3 py-1.5 text-xs text-red-100 hover:bg-red-500/30"
+          >
+            Retry
+          </button>
         </div>
       ) : null}
 
