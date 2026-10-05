@@ -5,7 +5,7 @@ const QUICK = [
   "what should i focus on today?",
   "exam next week help me plan",
   "put a TOC goal in my app with steps",
-  "i fell behind, help me catch up",
+  "how are my goals looking overall?",
 ];
 
 export default function Assistant() {
@@ -13,7 +13,7 @@ export default function Assistant() {
     {
       role: "assistant",
       text:
-        "Hey — talk to me like a normal chat. Short notes, typos, ‘exam next week help’ — all fine.\n\nI can see your goals and tasks. If you want something saved, say “put this in my goals” or “ok save that plan as steps”.\n\nTip: if the first message fails, open the API once (ecliptica-api.onrender.com) and retry — free hosting sleeps when idle.",
+        "I’m your Ecliptica coach — talk the same way you would to Gemini.\n\nI can see your **Goals**, **tasks**, and **Dashboard** schedule live, and I can add goals, steps, and tasks when you want.\n\nHealth & Finance pages exist in the app, but server data for those isn’t wired yet — I can still plan with you there.\n\nAsk anything. No formal mode required.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -41,11 +41,10 @@ export default function Assistant() {
     setLoading(true);
 
     try {
-      // Gemini + free Render cold start can take a while
       const api = createApi(token, 120000);
       const history = messages
         .filter((m) => m.text)
-        .slice(-10)
+        .slice(-12)
         .map((m) => ({ role: m.role, text: m.text }));
 
       const res = await api.post("/assistant/chat", {
@@ -90,7 +89,7 @@ export default function Assistant() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Assistant</h1>
         <p className="mt-1 text-sm text-gray-400">
-          Natural chat · reads your goals · saves steps when you ask
+          Full chat · live Goals & schedule · can act in the app
         </p>
       </div>
 
@@ -143,7 +142,7 @@ export default function Assistant() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="e.g. put TOC plan in my goals as steps"
+          placeholder="Ask anything — plans, exams, goals, schedule…"
           disabled={loading}
           className="flex-1 rounded-xl border border-gray-700 bg-[#0b0b0f] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none disabled:opacity-60"
         />
