@@ -10,12 +10,14 @@ const QUICK = [
 
 const CHAT_STORAGE_KEY = "ecliptica_assistant_chat_v1";
 const MAX_STORED = 120;
+const MAX_IMAGE_MB = 4;
 
 const WELCOME = {
   role: "assistant",
   text:
-    "I'm your Ecliptica coach — talk the same way you would to Gemini.\n\nI can see your **Goals**, **tasks**, and **Dashboard** schedule live, and I can add goals, steps, and tasks when you want.\n\nHealth & Finance pages exist in the app, but server data for those isn't wired yet — I can still plan with you there.\n\nAsk anything. No formal mode required.\n\nYour chat is saved on this device — scroll up anytime to see earlier messages.",
+    "I'm your Ecliptica coach — talk the same way you would to Gemini.\n\nI can see your **Goals**, **tasks**, and **Dashboard** schedule live, and I can add goals, steps, and tasks when you want.\n\nYou can also **attach an image** (screenshot, syllabus, timetable, WhatsApp) — I'll read the text in it.\n\nChat is saved on this device — scroll up for earlier messages.",
   at: null,
+  imagePreview: null,
 };
 
 function loadChatLog() {
@@ -30,6 +32,8 @@ function loadChatLog() {
         role: m.role,
         text: String(m.text),
         at: m.at || null,
+        imagePreview: null,
+        hadImage: Boolean(m.hadImage),
       }));
   } catch {
     return [WELCOME];
@@ -38,10 +42,15 @@ function loadChatLog() {
 
 function saveChatLog(messages) {
   try {
-    const trimmed = messages.slice(-MAX_STORED);
+    const trimmed = messages.slice(-MAX_STORED).map((m) => ({
+      role: m.role,
+      text: m.text,
+      at: m.at || null,
+      hadImage: Boolean(m.hadImage || m.imagePreview),
+    }));
     localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(trimmed));
   } catch {
-    // storage full or private mode — ignore
+    // ignore
   }
 }
 
@@ -66,16 +75,15 @@ export default function Assistant() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingImage, setPendingImage] = useState(null);
   const bottomRef = useRef(null);
-  const listRef = useRef(null);
+  const fileRef = useRef(null);
   const didInitialScroll = useRef(false);
 
-  // Persist whenever messages change
   useEffect(() => {
     saveChatLog(messages);
   }, [messages]);
 
-  // Scroll to bottom on new messages (after first load, smooth)
   useEffect(() => {
     if (!didInitialScroll.current) {
       bottomRef.current?.scrollIntoView({ behavior: "auto" });
@@ -93,11 +101,44 @@ export default function Assistant() {
     setMessages(fresh);
     saveChatLog(fresh);
     setError("");
+    setPendingImage(null);
+  };
+
+  const onPickImage = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file (png, jpg, webp…)");
+      return;
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setError(`Image is too large (max ${MAX_IMAGE_MB}MB)`);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      const parts = dataUrl.split(",");
+      const base64 = parts.length > 1 ? parts[1] : "";
+      if (!base64) {
+        setError("Could not read that image");
+        return;
+      }
+      setPendingImage({
+        base64,
+        mime: file.type || "image/jpeg",
+        preview: dataUrl,
+      });
+      setError("");
+    };
+    reader.onerror = () => setError("Could not read that image");
+    reader.readAsDataURL(file);
   };
 
   const send = async (text) => {
     const content = (text || input).trim();
-    if (!content || loading) return;
+    if ((!content && !pendingImage) || loading) return;
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -105,24 +146,43 @@ export default function Assistant() {
       return;
     }
 
+    const imageToSend = pendingImage;
+    const displayText =
+      content || (imageToSend ? "📷 Please read this image" : "");
+
     setInput("");
+    setPendingImage(null);
     setError("");
     const now = new Date().toISOString();
-    setMessages((m) => [...m, { role: "user", text: content, at: now }]);
+    setMessages((m) => [
+      ...m,
+      {
+        role: "user",
+        text: displayText,
+        at: now,
+        imagePreview: imageToSend?.preview || null,
+        hadImage: Boolean(imageToSend),
+      },
+    ]);
     setLoading(true);
 
     try {
       const api = createApi(token, 120000);
-      // Send recent history so the AI remembers this thread
       const history = messages
         .filter((m) => m.text && m.role !== "system")
         .slice(-16)
         .map((m) => ({ role: m.role, text: m.text }));
 
-      const res = await api.post("/assistant/chat", {
-        message: content,
+      const payload = {
+        message: content || displayText,
         history,
-      });
+      };
+      if (imageToSend) {
+        payload.image_base64 = imageToSend.base64;
+        payload.image_mime = imageToSend.mime;
+      }
+
+      const res = await api.post("/assistant/chat", payload);
 
       let reply =
         res.data?.reply ||
@@ -166,7 +226,7 @@ export default function Assistant() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">Assistant</h1>
           <p className="mt-1 text-sm text-gray-400">
-            Chat log saved on this device · scroll up for earlier messages
+            Chat log · attach screenshots · scroll up for history
           </p>
         </div>
         <button
@@ -198,10 +258,7 @@ export default function Assistant() {
         </div>
       ) : null}
 
-      <div
-        ref={listRef}
-        className="mb-4 flex-1 space-y-3 overflow-y-auto rounded-2xl border border-white/5 bg-[#121218] p-4"
-      >
+      <div className="mb-4 flex-1 space-y-3 overflow-y-auto rounded-2xl border border-white/5 bg-[#121218] p-4">
         {messages.map((msg, i) => (
           <div
             key={`${msg.at || "m"}-${i}`}
@@ -221,7 +278,15 @@ export default function Assistant() {
                   }`}
                 >
                   {formatTime(msg.at)}
+                  {msg.hadImage && !msg.imagePreview ? " · 📷 image" : ""}
                 </div>
+              ) : null}
+              {msg.imagePreview ? (
+                <img
+                  src={msg.imagePreview}
+                  alt="Attached"
+                  className="mb-2 max-h-40 rounded-lg border border-white/10 object-contain"
+                />
               ) : null}
               <div className="whitespace-pre-wrap">{msg.text}</div>
             </div>
@@ -229,23 +294,59 @@ export default function Assistant() {
         ))}
         {loading ? (
           <div className="px-1 text-xs text-gray-500">
-            Thinking… (first reply after idle can take up to ~1 min)
+            Reading… (images can take longer; API may wake up first)
           </div>
         ) : null}
         <div ref={bottomRef} />
       </div>
 
+      {pendingImage ? (
+        <div className="mb-2 flex items-center gap-3 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-2">
+          <img
+            src={pendingImage.preview}
+            alt="Preview"
+            className="h-14 w-14 rounded-lg object-cover"
+          />
+          <div className="min-w-0 flex-1 text-xs text-purple-100">
+            Image ready — add a note or just hit Send
+          </div>
+          <button
+            type="button"
+            onClick={() => setPendingImage(null)}
+            className="text-xs text-gray-400 hover:text-white"
+          >
+            Remove
+          </button>
+        </div>
+      ) : null}
+
       <form onSubmit={onSubmit} className="flex gap-2">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onPickImage}
+        />
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => fileRef.current?.click()}
+          title="Attach image"
+          className="rounded-xl border border-gray-700 bg-[#0b0b0f] px-3 py-3 text-sm text-gray-300 transition hover:border-purple-500 hover:text-white disabled:opacity-50"
+        >
+          📷
+        </button>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask anything — plans, exams, goals, schedule…"
+          placeholder="Message or attach a screenshot…"
           disabled={loading}
           className="flex-1 rounded-xl border border-gray-700 bg-[#0b0b0f] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (!input.trim() && !pendingImage)}
           className="rounded-xl bg-purple-600 px-5 py-3 text-sm font-medium transition hover:bg-purple-500 disabled:opacity-50"
         >
           Send
