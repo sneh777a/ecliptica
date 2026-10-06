@@ -11,11 +11,12 @@ const QUICK = [
 const CHAT_STORAGE_KEY = "ecliptica_assistant_chat_v1";
 const MAX_STORED = 120;
 const MAX_IMAGE_MB = 4;
+const MAX_PDF_MB = 8;
 
 const WELCOME = {
   role: "assistant",
   text:
-    "I'm your Ecliptica coach — talk the same way you would to Gemini.\n\nI can see your **Goals**, **tasks**, and **Dashboard** schedule live, and I can add goals, steps, and tasks when you want.\n\nYou can also **attach an image** (screenshot, syllabus, timetable, WhatsApp) — I'll read the text in it.\n\nChat is saved on this device — scroll up for earlier messages.",
+    "I'm your Ecliptica coach — talk the same way you would to Gemini.\n\nI can see your **Goals**, **tasks**, and **Dashboard** schedule live, and I can add goals, steps, and tasks when you want.\n\nYou can **attach an image or PDF** (screenshot, syllabus, past papers, timetable) — I'll read the text.\n\nChat is saved on this device — scroll up for earlier messages.",
   at: null,
   imagePreview: null,
 };
@@ -34,6 +35,7 @@ function loadChatLog() {
         at: m.at || null,
         imagePreview: null,
         hadImage: Boolean(m.hadImage),
+        hadPdf: Boolean(m.hadPdf),
       }));
   } catch {
     return [WELCOME];
@@ -47,6 +49,7 @@ function saveChatLog(messages) {
       text: m.text,
       at: m.at || null,
       hadImage: Boolean(m.hadImage || m.imagePreview),
+      hadPdf: Boolean(m.hadPdf),
     }));
     localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(trimmed));
   } catch {
@@ -104,35 +107,48 @@ export default function Assistant() {
     setPendingImage(null);
   };
 
-  const onPickImage = (e) => {
+  const onPickFile = (e) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file (png, jpg, webp…)");
+
+    const isImage = file.type.startsWith("image/");
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+
+    if (!isImage && !isPdf) {
+      setError("Please choose an image (png, jpg, webp) or a PDF");
       return;
     }
-    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+    if (isImage && file.size > MAX_IMAGE_MB * 1024 * 1024) {
       setError(`Image is too large (max ${MAX_IMAGE_MB}MB)`);
       return;
     }
+    if (isPdf && file.size > MAX_PDF_MB * 1024 * 1024) {
+      setError(`PDF is too large (max ${MAX_PDF_MB}MB)`);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = String(reader.result || "");
       const parts = dataUrl.split(",");
       const base64 = parts.length > 1 ? parts[1] : "";
       if (!base64) {
-        setError("Could not read that image");
+        setError("Could not read that file");
         return;
       }
       setPendingImage({
+        kind: isPdf ? "pdf" : "image",
+        name: file.name,
         base64,
-        mime: file.type || "image/jpeg",
-        preview: dataUrl,
+        mime: isPdf ? "application/pdf" : file.type || "image/jpeg",
+        preview: isImage ? dataUrl : null,
       });
       setError("");
     };
-    reader.onerror = () => setError("Could not read that image");
+    reader.onerror = () => setError("Could not read that file");
     reader.readAsDataURL(file);
   };
 
@@ -146,9 +162,14 @@ export default function Assistant() {
       return;
     }
 
-    const imageToSend = pendingImage;
+    const fileToSend = pendingImage;
     const displayText =
-      content || (imageToSend ? "📷 Please read this image" : "");
+      content ||
+      (fileToSend?.kind === "pdf"
+        ? `📄 Please read this PDF${fileToSend.name ? `: ${fileToSend.name}` : ""}`
+        : fileToSend
+          ? "📷 Please read this image"
+          : "");
 
     setInput("");
     setPendingImage(null);
@@ -160,8 +181,9 @@ export default function Assistant() {
         role: "user",
         text: displayText,
         at: now,
-        imagePreview: imageToSend?.preview || null,
-        hadImage: Boolean(imageToSend),
+        imagePreview: fileToSend?.preview || null,
+        hadImage: fileToSend?.kind === "image",
+        hadPdf: fileToSend?.kind === "pdf",
       },
     ]);
     setLoading(true);
@@ -177,9 +199,12 @@ export default function Assistant() {
         message: content || displayText,
         history,
       };
-      if (imageToSend) {
-        payload.image_base64 = imageToSend.base64;
-        payload.image_mime = imageToSend.mime;
+      if (fileToSend?.kind === "image") {
+        payload.image_base64 = fileToSend.base64;
+        payload.image_mime = fileToSend.mime;
+      }
+      if (fileToSend?.kind === "pdf") {
+        payload.pdf_base64 = fileToSend.base64;
       }
 
       const res = await api.post("/assistant/chat", payload);
@@ -226,7 +251,7 @@ export default function Assistant() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">Assistant</h1>
           <p className="mt-1 text-sm text-gray-400">
-            Chat log · attach screenshots · scroll up for history
+            Chat log · images & PDFs · scroll up for history
           </p>
         </div>
         <button
@@ -279,6 +304,7 @@ export default function Assistant() {
                 >
                   {formatTime(msg.at)}
                   {msg.hadImage && !msg.imagePreview ? " · 📷 image" : ""}
+                  {msg.hadPdf ? " · 📄 PDF" : ""}
                 </div>
               ) : null}
               {msg.imagePreview ? (
@@ -294,7 +320,7 @@ export default function Assistant() {
         ))}
         {loading ? (
           <div className="px-1 text-xs text-gray-500">
-            Reading… (images can take longer; API may wake up first)
+            Reading… (PDFs/images can take longer; API may wake up first)
           </div>
         ) : null}
         <div ref={bottomRef} />
@@ -302,13 +328,20 @@ export default function Assistant() {
 
       {pendingImage ? (
         <div className="mb-2 flex items-center gap-3 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-2">
-          <img
-            src={pendingImage.preview}
-            alt="Preview"
-            className="h-14 w-14 rounded-lg object-cover"
-          />
+          {pendingImage.kind === "image" && pendingImage.preview ? (
+            <img
+              src={pendingImage.preview}
+              alt="Preview"
+              className="h-14 w-14 rounded-lg object-cover"
+            />
+          ) : (
+            <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/10 text-2xl">
+              📄
+            </div>
+          )}
           <div className="min-w-0 flex-1 text-xs text-purple-100">
-            Image ready — add a note or just hit Send
+            {pendingImage.kind === "pdf" ? "PDF" : "Image"} ready
+            {pendingImage.name ? ` — ${pendingImage.name}` : ""} · add a note or Send
           </div>
           <button
             type="button"
@@ -324,23 +357,23 @@ export default function Assistant() {
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          accept="image/*,application/pdf,.pdf"
           className="hidden"
-          onChange={onPickImage}
+          onChange={onPickFile}
         />
         <button
           type="button"
           disabled={loading}
           onClick={() => fileRef.current?.click()}
-          title="Attach image"
+          title="Attach image or PDF"
           className="rounded-xl border border-gray-700 bg-[#0b0b0f] px-3 py-3 text-sm text-gray-300 transition hover:border-purple-500 hover:text-white disabled:opacity-50"
         >
-          📷
+          📎
         </button>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Message or attach a screenshot…"
+          placeholder="Message, image, or PDF…"
           disabled={loading}
           className="flex-1 rounded-xl border border-gray-700 bg-[#0b0b0f] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none disabled:opacity-60"
         />
