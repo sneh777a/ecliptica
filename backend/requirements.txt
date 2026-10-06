@@ -11,3 +11,6 @@ pydantic-settings
 email-validator
 google-generativeai
 pypdf
+python-docx
+python-pptx
+openpyxl
