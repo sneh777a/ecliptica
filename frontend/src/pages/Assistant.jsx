@@ -11,12 +11,12 @@ const QUICK = [
 const CHAT_STORAGE_KEY = "ecliptica_assistant_chat_v1";
 const MAX_STORED = 120;
 const MAX_IMAGE_MB = 4;
-const MAX_PDF_MB = 8;
+const MAX_DOC_MB = 8;
 
 const WELCOME = {
   role: "assistant",
   text:
-    "I'm your Ecliptica coach — talk the same way you would to Gemini.\n\nI can see your **Goals**, **tasks**, and **Dashboard** schedule live, and I can add goals, steps, and tasks when you want.\n\nYou can **attach an image or PDF** (screenshot, syllabus, past papers, timetable) — I'll read the text.\n\nChat is saved on this device — scroll up for earlier messages.",
+    "I'm your Ecliptica coach — talk the same way you would to Gemini.\n\nI can see your **Goals**, **tasks**, and **Dashboard** schedule live, and I can add goals, steps, and tasks when you want.\n\nYou can **attach image, PDF, Word, PowerPoint, or Excel** — I'll read the text.\n\nChat is saved on this device — scroll up for earlier messages.",
   at: null,
   imagePreview: null,
 };
@@ -36,6 +36,7 @@ function loadChatLog() {
         imagePreview: null,
         hadImage: Boolean(m.hadImage),
         hadPdf: Boolean(m.hadPdf),
+        hadDoc: Boolean(m.hadDoc),
       }));
   } catch {
     return [WELCOME];
@@ -50,6 +51,7 @@ function saveChatLog(messages) {
       at: m.at || null,
       hadImage: Boolean(m.hadImage || m.imagePreview),
       hadPdf: Boolean(m.hadPdf),
+      hadDoc: Boolean(m.hadDoc),
     }));
     localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(trimmed));
   } catch {
@@ -112,21 +114,41 @@ export default function Assistant() {
     e.target.value = "";
     if (!file) return;
 
+    const name = (file.name || "").toLowerCase();
     const isImage = file.type.startsWith("image/");
-    const isPdf =
-      file.type === "application/pdf" ||
-      file.name.toLowerCase().endsWith(".pdf");
+    let kind = null;
+    if (isImage) kind = "image";
+    else if (file.type === "application/pdf" || name.endsWith(".pdf")) kind = "pdf";
+    else if (
+      name.endsWith(".docx") ||
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+      kind = "docx";
+    else if (
+      name.endsWith(".pptx") ||
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    )
+      kind = "pptx";
+    else if (
+      name.endsWith(".xlsx") ||
+      name.endsWith(".xlsm") ||
+      file.type ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+      kind = "xlsx";
 
-    if (!isImage && !isPdf) {
-      setError("Please choose an image (png, jpg, webp) or a PDF");
+    if (!kind) {
+      setError("Use image, PDF, Word (.docx), PowerPoint (.pptx), or Excel (.xlsx)");
       return;
     }
-    if (isImage && file.size > MAX_IMAGE_MB * 1024 * 1024) {
+    if (kind === "image" && file.size > MAX_IMAGE_MB * 1024 * 1024) {
       setError(`Image is too large (max ${MAX_IMAGE_MB}MB)`);
       return;
     }
-    if (isPdf && file.size > MAX_PDF_MB * 1024 * 1024) {
-      setError(`PDF is too large (max ${MAX_PDF_MB}MB)`);
+    if (kind !== "image" && file.size > MAX_DOC_MB * 1024 * 1024) {
+      setError(`File is too large (max ${MAX_DOC_MB}MB)`);
       return;
     }
 
@@ -140,11 +162,11 @@ export default function Assistant() {
         return;
       }
       setPendingImage({
-        kind: isPdf ? "pdf" : "image",
+        kind,
         name: file.name,
         base64,
-        mime: isPdf ? "application/pdf" : file.type || "image/jpeg",
-        preview: isImage ? dataUrl : null,
+        mime: file.type || "application/octet-stream",
+        preview: kind === "image" ? dataUrl : null,
       });
       setError("");
     };
@@ -163,13 +185,24 @@ export default function Assistant() {
     }
 
     const fileToSend = pendingImage;
+    const kind = fileToSend?.kind;
+    const label =
+      kind === "pdf"
+        ? "PDF"
+        : kind === "docx"
+          ? "Word"
+          : kind === "pptx"
+            ? "PowerPoint"
+            : kind === "xlsx"
+              ? "Excel"
+              : kind === "image"
+                ? "image"
+                : "file";
     const displayText =
       content ||
-      (fileToSend?.kind === "pdf"
-        ? `📄 Please read this PDF${fileToSend.name ? `: ${fileToSend.name}` : ""}`
-        : fileToSend
-          ? "📷 Please read this image"
-          : "");
+      (fileToSend
+        ? `Please read this ${label}${fileToSend.name ? `: ${fileToSend.name}` : ""}`
+        : "");
 
     setInput("");
     setPendingImage(null);
@@ -182,8 +215,9 @@ export default function Assistant() {
         text: displayText,
         at: now,
         imagePreview: fileToSend?.preview || null,
-        hadImage: fileToSend?.kind === "image",
-        hadPdf: fileToSend?.kind === "pdf",
+        hadImage: kind === "image",
+        hadPdf: kind === "pdf",
+        hadDoc: kind === "docx" || kind === "pptx" || kind === "xlsx",
       },
     ]);
     setLoading(true);
@@ -202,9 +236,13 @@ export default function Assistant() {
       if (fileToSend?.kind === "image") {
         payload.image_base64 = fileToSend.base64;
         payload.image_mime = fileToSend.mime;
-      }
-      if (fileToSend?.kind === "pdf") {
-        payload.pdf_base64 = fileToSend.base64;
+      } else if (fileToSend?.kind) {
+        payload.file_base64 = fileToSend.base64;
+        payload.file_type = fileToSend.kind;
+        payload.file_name = fileToSend.name || "";
+        if (fileToSend.kind === "pdf") {
+          payload.pdf_base64 = fileToSend.base64;
+        }
       }
 
       const res = await api.post("/assistant/chat", payload);
@@ -251,7 +289,7 @@ export default function Assistant() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-white">Assistant</h1>
           <p className="mt-1 text-sm text-gray-400">
-            Chat log · images & PDFs · scroll up for history
+            Chat log · files · scroll up for history
           </p>
         </div>
         <button
@@ -303,8 +341,9 @@ export default function Assistant() {
                   }`}
                 >
                   {formatTime(msg.at)}
-                  {msg.hadImage && !msg.imagePreview ? " · 📷 image" : ""}
-                  {msg.hadPdf ? " · 📄 PDF" : ""}
+                  {msg.hadImage && !msg.imagePreview ? " · image" : ""}
+                  {msg.hadPdf ? " · PDF" : ""}
+                  {msg.hadDoc ? " · doc" : ""}
                 </div>
               ) : null}
               {msg.imagePreview ? (
@@ -320,7 +359,7 @@ export default function Assistant() {
         ))}
         {loading ? (
           <div className="px-1 text-xs text-gray-500">
-            Reading… (PDFs/images can take longer; API may wake up first)
+            Reading file… (first reply after idle can take longer)
           </div>
         ) : null}
         <div ref={bottomRef} />
@@ -336,11 +375,23 @@ export default function Assistant() {
             />
           ) : (
             <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-white/10 text-2xl">
-              📄
+              {pendingImage.kind === "docx"
+                ? "W"
+                : pendingImage.kind === "pptx"
+                  ? "P"
+                  : pendingImage.kind === "xlsx"
+                    ? "X"
+                    : "F"}
             </div>
           )}
           <div className="min-w-0 flex-1 text-xs text-purple-100">
-            {pendingImage.kind === "pdf" ? "PDF" : "Image"} ready
+            {(pendingImage.kind === "image" && "Image") ||
+              (pendingImage.kind === "pdf" && "PDF") ||
+              (pendingImage.kind === "docx" && "Word") ||
+              (pendingImage.kind === "pptx" && "PowerPoint") ||
+              (pendingImage.kind === "xlsx" && "Excel") ||
+              "File"}{" "}
+            ready
             {pendingImage.name ? ` — ${pendingImage.name}` : ""} · add a note or Send
           </div>
           <button
@@ -357,7 +408,7 @@ export default function Assistant() {
         <input
           ref={fileRef}
           type="file"
-          accept="image/*,application/pdf,.pdf"
+          accept="image/*,.pdf,.docx,.pptx,.xlsx,.xlsm,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           className="hidden"
           onChange={onPickFile}
         />
@@ -365,15 +416,15 @@ export default function Assistant() {
           type="button"
           disabled={loading}
           onClick={() => fileRef.current?.click()}
-          title="Attach image or PDF"
+          title="Attach image, PDF, Word, PPT, Excel"
           className="rounded-xl border border-gray-700 bg-[#0b0b0f] px-3 py-3 text-sm text-gray-300 transition hover:border-purple-500 hover:text-white disabled:opacity-50"
         >
-          📎
+          +
         </button>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Message, image, or PDF…"
+          placeholder="Message or attach a file…"
           disabled={loading}
           className="flex-1 rounded-xl border border-gray-700 bg-[#0b0b0f] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-purple-500 focus:outline-none disabled:opacity-60"
         />
