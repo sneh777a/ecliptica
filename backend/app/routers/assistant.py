@@ -29,15 +29,24 @@ MAX_IMAGE_BYTES = 4 * 1024 * 1024
 MAX_PDF_BYTES = 8 * 1024 * 1024
 MAX_PDF_PAGES = 30
 MAX_PDF_CHARS = 50000
+MAX_DOCUMENT_BYTES = 8 * 1024 * 1024
+MAX_DOCUMENT_CHARS = 50000
 
-SYSTEM_PROMPT = """You are Ecliptica AI — a capable assistant like Gemini inside the user's personal OS.
-You receive LIVE goals, tasks, and schedule data. Use it. Prefer facts over guesses.
-When the user wants something saved (goal/steps/tasks), end with:
+SYSTEM_PROMPT = """You are Ecliptica AI, a warm, capable study companion for a student.
+Help the user learn concepts clearly, plan realistic study sessions, make progress on
+their goals, and practice with quizzes. For quizzes, ask one question at a time and
+wait for the student's answer before revealing the solution.
+
+You receive LIVE goals, tasks, and schedule data. Use it when relevant and distinguish
+known facts from suggestions. Never invent the user's progress, schedule, or deadlines.
+Only create or change app data when the user explicitly asks you to save or add it.
+When they do, end with:
 <<<ACTIONS
 [{"action":"create_goal","title":"...","type":"monthly","deadline":"YYYY-MM-DD"},
  {"action":"add_step","goal_title":"...","text":"..."},
  {"action":"create_task","text":"...","date":"YYYY-MM-DD"}]
 ACTIONS>>>
+Be encouraging without being pushy. Prefer clear, useful answers over generic motivation.
 """
 
 
@@ -78,7 +87,7 @@ def _decode_b64(raw: str) -> bytes:
     data = (raw or "").strip()
     if "," in data and data.lower().startswith("data:"):
         data = data.split(",", 1)[1]
-    return base64.b64decode(data, validate=False)
+    return base64.b64decode(data, validate=True)
 
 
 def _extract_pdf_text(pdf_bytes: bytes) -> str:
@@ -98,8 +107,64 @@ def _extract_pdf_text(pdf_bytes: bytes) -> str:
         if len(joined) > MAX_PDF_CHARS:
             joined = joined[:MAX_PDF_CHARS] + "\n\n[…truncated…]"
         return joined
-    except Exception as e:
-        return f"[PDF text extraction failed: {e}]"
+    except Exception:
+        return "The PDF could not be read. Please check that it is a valid, text-based PDF."
+
+
+def _extract_document_text(file_bytes: bytes, file_type: str) -> str:
+    """Extract bounded text from supported office documents before sending to Gemini."""
+    try:
+        from io import BytesIO
+
+        parts: List[str] = []
+        if file_type == "docx":
+            from docx import Document
+
+            document = Document(BytesIO(file_bytes))
+            parts.extend(paragraph.text.strip() for paragraph in document.paragraphs if paragraph.text.strip())
+            for table in document.tables:
+                for row in table.rows:
+                    values = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                    if values:
+                        parts.append(" | ".join(values))
+        elif file_type == "pptx":
+            from pptx import Presentation
+
+            presentation = Presentation(BytesIO(file_bytes))
+            for slide_number, slide in enumerate(presentation.slides, start=1):
+                if slide_number > 100:
+                    break
+                text = [
+                    shape.text.strip()
+                    for shape in slide.shapes
+                    if getattr(shape, "has_text_frame", False) and shape.text.strip()
+                ]
+                if text:
+                    parts.append(f"--- slide {slide_number} ---\n" + "\n".join(text))
+        elif file_type == "xlsx":
+            from openpyxl import load_workbook
+
+            workbook = load_workbook(BytesIO(file_bytes), read_only=True, data_only=True)
+            try:
+                for worksheet in workbook.worksheets[:20]:
+                    rows = []
+                    for row in worksheet.iter_rows(max_row=200, max_col=30, values_only=True):
+                        values = [str(value).strip() for value in row if value is not None and str(value).strip()]
+                        if values:
+                            rows.append(" | ".join(values))
+                    if rows:
+                        parts.append(f"--- sheet: {worksheet.title} ---\n" + "\n".join(rows))
+            finally:
+                workbook.close()
+        else:
+            raise ValueError("Unsupported document type")
+
+        text = "\n\n".join(parts).strip()
+        if len(text) > MAX_DOCUMENT_CHARS:
+            text = text[:MAX_DOCUMENT_CHARS] + "\n\n[…truncated…]"
+        return text or "No readable text was found in the document."
+    except Exception:
+        return "The document could not be read. Please check that it is a valid, supported file."
 
 
 def _split_actions(raw: str) -> tuple:
@@ -235,6 +300,7 @@ async def chat(
     image_b64 = (body.image_base64 or "").strip()
     pdf_b64 = (body.pdf_base64 or "").strip()
     file_b64 = (body.file_base64 or "").strip()
+    file_type = (body.file_type or "").strip().lower()
 
     if not message and not image_b64 and not pdf_b64 and not file_b64:
         raise HTTPException(status_code=400, detail="Message or attachment is required")
@@ -243,18 +309,27 @@ async def chat(
         message = "Please read the attached file. Extract text, dates, tasks, deadlines. Offer to save useful items to my goals."
 
     context = await _user_context(db, current_user)
-    pdf_text = ""
-    if pdf_b64:
+    attachment_text = ""
+    if pdf_b64 or file_b64:
+        encoded_file = pdf_b64 or file_b64
+        attachment_type = "pdf" if pdf_b64 else file_type
         try:
-            pdf_bytes = _decode_b64(pdf_b64)
-            if len(pdf_bytes) <= MAX_PDF_BYTES:
-                pdf_text = _extract_pdf_text(pdf_bytes)
-        except Exception:
-            pdf_text = "[PDF could not be read]"
+            file_bytes = _decode_b64(encoded_file)
+        except (ValueError, base64.binascii.Error):
+            raise HTTPException(status_code=400, detail="The attachment could not be decoded")
+        max_bytes = MAX_PDF_BYTES if attachment_type == "pdf" else MAX_DOCUMENT_BYTES
+        if len(file_bytes) > max_bytes:
+            raise HTTPException(status_code=413, detail="The attachment exceeds the 8 MB limit")
+        if attachment_type == "pdf":
+            attachment_text = _extract_pdf_text(file_bytes)
+        elif attachment_type in ("docx", "pptx", "xlsx"):
+            attachment_text = _extract_document_text(file_bytes, attachment_type)
+        else:
+            raise HTTPException(status_code=400, detail="This document type is not supported")
 
     augmented = f"[LIVE DATA]\n{context}\n\n[USER]\n{message}"
-    if pdf_text:
-        augmented += f"\n\n[PDF TEXT]\n{pdf_text}"
+    if attachment_text:
+        augmented += f"\n\n[ATTACHMENT TEXT]\n{attachment_text}"
 
     history = []
     for item in (body.history or [])[-12:]:
@@ -274,10 +349,12 @@ async def chat(
     if image_b64:
         try:
             image_bytes = _decode_b64(image_b64)
-            if len(image_bytes) > MAX_IMAGE_BYTES:
-                image_bytes = None
-        except Exception:
-            image_bytes = None
+        except (ValueError, base64.binascii.Error):
+            raise HTTPException(status_code=400, detail="The image could not be decoded")
+        if len(image_bytes) > MAX_IMAGE_BYTES:
+            raise HTTPException(status_code=413, detail="Images must be 4 MB or smaller")
+        if not image_mime.startswith("image/"):
+            raise HTTPException(status_code=400, detail="The image content type is invalid")
 
     for model_name in GEMINI_MODELS:
         try:
