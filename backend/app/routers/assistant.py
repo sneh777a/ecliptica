@@ -64,11 +64,14 @@ class ChatRequest(BaseModel):
     file_base64: Optional[str] = None
     file_type: Optional[str] = None
     file_name: Optional[str] = None
+    confirm_actions: bool = False
+    pending_actions: Optional[List[Dict[str, Any]]] = None
 
 
 class ChatResponse(BaseModel):
     reply: str
     actions_applied: List[str] = []
+    pending_actions: List[Dict[str, Any]] = []
 
 
 def _is_quota_error(err: Exception) -> bool:
@@ -198,6 +201,65 @@ def _parse_date(value: Optional[str]):
         return None
 
 
+def _validate_action_payload(action: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(action, dict):
+        raise ValueError("Each action must be an object.")
+    kind = str(action.get("action") or "").strip().lower()
+    if kind not in {"create_goal", "add_step", "create_task"}:
+        raise ValueError(f"Unsupported action type: {kind or 'missing'}")
+
+    if kind == "create_goal":
+        title = str(action.get("title") or "").strip()
+        if not title or len(title) > 160:
+            raise ValueError("Goal actions require a valid title (1-160 chars).")
+        gtype = str(action.get("type") or "monthly").strip().lower()
+        if gtype not in {"year", "monthly", "weekly"}:
+            raise ValueError("Goal type must be weekly, monthly, or yearly.")
+        deadline = str(action.get("deadline") or "").strip()
+        if deadline and _parse_date(deadline) is None:
+            raise ValueError("Goal deadline must be a valid YYYY-MM-DD date.")
+        return {
+            "action": "create_goal",
+            "title": title,
+            "description": str(action.get("description") or "").strip(),
+            "type": gtype,
+            "deadline": deadline,
+        }
+
+    if kind == "add_step":
+        text = str(action.get("text") or "").strip()
+        goal_title = str(action.get("goal_title") or "").strip()
+        if not text or not goal_title:
+            raise ValueError("Step actions require both text and goal_title.")
+        if len(text) > 240:
+            raise ValueError("Step text cannot exceed 240 characters.")
+        return {"action": "add_step", "goal_title": goal_title, "text": text}
+
+    text = str(action.get("text") or "").strip()
+    if not text or len(text) > 240:
+        raise ValueError("Task actions require valid text (1-240 chars).")
+    task_date = str(action.get("date") or "").strip()
+    parsed_date = _parse_date(task_date)
+    if task_date and parsed_date is None:
+        raise ValueError("Task dates must be valid YYYY-MM-DD values.")
+    return {
+        "action": "create_task",
+        "text": text,
+        "date": task_date,
+        "time": str(action.get("time") or "").strip(),
+        "type": str(action.get("type") or "daily").strip() or "daily",
+    }
+
+
+def _validate_actions(actions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    if not isinstance(actions, list):
+        raise ValueError("AI actions must be a list of action objects.")
+    normalized: List[Dict[str, Any]] = []
+    for action in actions:
+        normalized.append(_validate_action_payload(action))
+    return normalized
+
+
 async def _user_context(db: AsyncSession, user: User) -> str:
     goals_result = await db.execute(
         select(Goal).where(Goal.user_id == user.id).options(selectinload(Goal.tasks)).order_by(Goal.id.desc())
@@ -229,27 +291,29 @@ async def _user_context(db: AsyncSession, user: User) -> str:
 
 
 async def _apply_actions(db: AsyncSession, user: User, actions: List[Dict[str, Any]]) -> List[str]:
+    validated = _validate_actions(actions)
     applied: List[str] = []
     title_to_id: Dict[str, int] = {}
     existing = await db.execute(select(Goal).where(Goal.user_id == user.id))
     for g in existing.scalars().all():
         title_to_id[g.title.strip().lower()] = g.id
-    for act in actions:
+    for act in validated:
         kind = str(act.get("action") or "").strip().lower()
         if kind == "create_goal":
             title = str(act.get("title") or "").strip()
-            if not title:
-                continue
             key = title.lower()
             if key in title_to_id:
                 applied.append(f"Already had goal: {title}")
                 continue
             gtype = str(act.get("type") or "monthly").strip().lower()
-            if gtype not in ("year", "monthly", "weekly"):
-                gtype = "monthly"
             goal = Goal(
-                user_id=user.id, title=title, description=str(act.get("description") or ""),
-                type=gtype, target_count=0, completed_count=0, progress=0.0,
+                user_id=user.id,
+                title=title,
+                description=str(act.get("description") or "").strip(),
+                type=gtype,
+                target_count=0,
+                completed_count=0,
+                progress=0.0,
                 deadline=str(act.get("deadline") or "").strip(),
             )
             db.add(goal)
@@ -260,8 +324,6 @@ async def _apply_actions(db: AsyncSession, user: User, actions: List[Dict[str, A
         elif kind == "add_step":
             text = str(act.get("text") or "").strip()
             goal_title = str(act.get("goal_title") or "").strip().lower()
-            if not text:
-                continue
             gid = title_to_id.get(goal_title)
             if gid is None:
                 for k, v in title_to_id.items():
@@ -277,12 +339,14 @@ async def _apply_actions(db: AsyncSession, user: User, actions: List[Dict[str, A
             applied.append(f"Added step: {text}")
         elif kind == "create_task":
             text = str(act.get("text") or "").strip()
-            if not text:
-                continue
             task = Task(
-                user_id=user.id, goal_id=None, text=text,
+                user_id=user.id,
+                goal_id=None,
+                text=text,
                 time=str(act.get("time") or "").strip(),
-                date=_parse_date(act.get("date")), type="daily", done=False,
+                date=_parse_date(act.get("date")),
+                type=str(act.get("type") or "daily").strip() or "daily",
+                done=False,
             )
             db.add(task)
             await db.commit()
@@ -346,6 +410,12 @@ async def chat(
     last_err = None
     image_bytes = None
     image_mime = (body.image_mime or "image/jpeg").strip()
+    requested_actions = []
+    if body.pending_actions:
+        try:
+            requested_actions = _validate_actions(body.pending_actions)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
     if image_b64:
         try:
             image_bytes = _decode_b64(image_b64)
@@ -379,11 +449,29 @@ async def chat(
         raise HTTPException(status_code=502, detail=f"AI request failed: {str(last_err)[:200] if last_err else 'empty'}")
 
     reply, actions = _split_actions(raw)
-    applied: List[str] = []
+    pending_actions: List[Dict[str, Any]] = []
     if actions:
-        applied = await _apply_actions(db, current_user, actions)
+        try:
+            pending_actions = _validate_actions(actions)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if body.confirm_actions and pending_actions:
+        applied = await _apply_actions(db, current_user, pending_actions)
+        if not reply:
+            reply = "Got it — I updated your app."
+        if applied:
+            reply = reply + "\n\n—\n" + "\n".join(f"✓ {a}" for a in applied)
+        return ChatResponse(reply=reply, actions_applied=applied)
+
+    if pending_actions:
+        action_summary = "; ".join(
+            f"{item['action']}({item.get('title') or item.get('goal_title') or item.get('text') or 'task'})"
+            for item in pending_actions
+        )
+        reply = (reply or "I can make that change for you.") + f"\n\nPlease confirm before I apply: {action_summary}"
+        return ChatResponse(reply=reply, actions_applied=[], pending_actions=pending_actions)
+
     if not reply:
-        reply = "Got it — I updated your app." if applied else "I could not generate a reply. Please try again."
-    if applied:
-        reply = reply + "\n\n—\n" + "\n".join(f"✓ {a}" for a in applied)
-    return ChatResponse(reply=reply, actions_applied=applied)
+        reply = "I could not generate a reply. Please try again."
+    return ChatResponse(reply=reply, actions_applied=[])

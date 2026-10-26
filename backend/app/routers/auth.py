@@ -28,6 +28,14 @@ def _email_configured() -> bool:
 
 @router.post("/register", response_model=UserResponse)
 async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
+    try:
+        password_hash = hash_password(user.password)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
     result = await db.execute(select(User).where(User.email == user.email))
     existing_user = result.scalars().first()
 
@@ -40,7 +48,7 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
     new_user = User(
         name=user.name,
         email=user.email,
-        password=hash_password(user.password),
+        password=password_hash,
     )
     db.add(new_user)
     await db.commit()
@@ -110,6 +118,13 @@ async def reset_password(body: ResetPasswordRequest, db: AsyncSession = Depends(
             status_code=400,
             detail="Password must be at least 6 characters",
         )
+    try:
+        password_hash = hash_password(body.new_password)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
 
     result = await db.execute(select(User).where(User.reset_token == body.token))
     user = result.scalars().first()
@@ -120,7 +135,7 @@ async def reset_password(body: ResetPasswordRequest, db: AsyncSession = Depends(
     if user.reset_token_expires < datetime.utcnow():
         raise HTTPException(status_code=400, detail="Reset link has expired")
 
-    user.password = hash_password(body.new_password)
+    user.password = password_hash
     user.reset_token = None
     user.reset_token_expires = None
     await db.commit()

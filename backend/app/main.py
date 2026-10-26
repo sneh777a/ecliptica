@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.routers import auth, goals, assistant
+from app.routers import auth, goals, assistant, health, finance
 from app.database import engine, Base
 from app.models.user import User
 from app.models.goal import Goal, Task
+from app.models.health import HealthRecord
+from app.models.finance import FinanceEntry
 
 app = FastAPI(title="Ecliptica API", version="1.0")
 
@@ -54,6 +56,8 @@ async def startup():
 app.include_router(auth.router)
 app.include_router(goals.router)
 app.include_router(assistant.router)
+app.include_router(health.router)
+app.include_router(finance.router)
 
 
 @app.get("/")
