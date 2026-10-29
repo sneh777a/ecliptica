@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import AssistantChat from "./AssistantChat";
 import useAssistant from "./useAssistant";
 import "./Assistant.css";
 
 export default function AssistantWidget() {
   const { messages } = useAssistant();
+  const { pathname } = useLocation();
   const [panelMode, setPanelMode] = useState("closed");
   const [seenReplyCount, setSeenReplyCount] = useState(() =>
     messages.filter((message) => message.role === "assistant" && message.id !== "welcome").length
@@ -28,7 +30,7 @@ export default function AssistantWidget() {
   }, [panelMode]);
 
   return (
-    <div className="assistant-widget">
+    <div className={`assistant-widget${pathname === "/goals" ? " assistant-widget--goals" : ""}`}>
       {panelMode === "open" ? (
         <AssistantChat
           variant="floating"

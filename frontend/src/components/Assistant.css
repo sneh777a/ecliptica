@@ -972,6 +972,19 @@
     padding-right: 0.85rem;
   }
 
+  .assistant-widget--goals {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 15px 15px;
+  }
+
+  .assistant-widget--goals .assistant-orb-button,
+  .assistant-widget--goals .assistant-minimized {
+    position: relative;
+    right: auto;
+    bottom: auto;
+  }
+
   .assistant-minimized {
     right: 12px;
     bottom: 12px;
